@@ -20,21 +20,21 @@ RSpec.describe Reminder::Directive do
     end
 
     context "when the directive has only a date" do
-      it "returns 8am on that date" do
-        expect(time_for("tomorrow")).to eq(Time.zone.parse("2026-10-20 08:00"))
-        expect(time_for("Oct 21")).to eq(Time.zone.parse("2026-10-21 08:00"))
+      it "returns 9am on that date" do
+        expect(time_for("tomorrow")).to eq(Time.zone.parse("2026-10-20 09:00"))
+        expect(time_for("Oct 21")).to eq(Time.zone.parse("2026-10-21 09:00"))
       end
     end
 
     context "when the date is the day daylight saving time ends" do
-      it "returns 8am on that date" do
-        expect(time_for("Nov 1")).to eq(Time.zone.parse("2026-11-01 08:00"))
+      it "returns 9am on that date" do
+        expect(time_for("Nov 1")).to eq(Time.zone.parse("2026-11-01 09:00"))
       end
     end
 
     context "when a month and day have already passed this year" do
       it "returns that date next year" do
-        expect(time_for("Oct 1")).to eq(Time.zone.parse("2027-10-01 08:00"))
+        expect(time_for("Oct 1")).to eq(Time.zone.parse("2027-10-01 09:00"))
       end
     end
 
@@ -48,7 +48,7 @@ RSpec.describe Reminder::Directive do
 
     context "when the directive is a weekday" do
       it "returns its next occurrence, moving to next week once its time has passed today" do
-        expect(time_for("friday")).to eq(Time.zone.parse("2026-10-23 08:00"))
+        expect(time_for("friday")).to eq(Time.zone.parse("2026-10-23 09:00"))
         expect(time_for("tues at 2:30pm")).to eq(Time.zone.parse("2026-10-20 14:30"))
         expect(time_for("monday 7pm")).to eq(Time.zone.parse("2026-10-19 19:00"))
         expect(time_for("monday 5pm")).to eq(Time.zone.parse("2026-10-26 17:00"))
@@ -69,10 +69,10 @@ RSpec.describe Reminder::Directive do
     end
 
     context "when the directive is a number of days, weeks, or months from now" do
-      it "returns that date, at 8am unless a time is given" do
-        expect(time_for("in 3 days")).to eq(Time.zone.parse("2026-10-22 08:00"))
+      it "returns that date, at 9am unless a time is given" do
+        expect(time_for("in 3 days")).to eq(Time.zone.parse("2026-10-22 09:00"))
         expect(time_for("in two weeks at 10am")).to eq(Time.zone.parse("2026-11-02 10:00"))
-        expect(time_for("in 1 month")).to eq(Time.zone.parse("2026-11-19 08:00"))
+        expect(time_for("in 1 month")).to eq(Time.zone.parse("2026-11-19 09:00"))
       end
     end
 

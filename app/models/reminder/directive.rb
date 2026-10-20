@@ -1,8 +1,8 @@
 # The time in a reminder's directive: the "tomorrow 9am" in "(@tomorrow 9am)". Anything it doesn't recognize has no
 # time rather than a guessed one.
 class Reminder::Directive
-  # Reminders with only a date ("friday", "Oct 21") go off at 8am.
-  DATE_ONLY_HOUR = 8
+  # Reminders with only a date ("friday", "Oct 21") go off at 9am.
+  DATE_ONLY_HOUR = 9
 
   WEEKDAYS = Date::DAYNAMES.map(&:downcase)
   MONTHS = Date::MONTHNAMES.compact.map(&:downcase)

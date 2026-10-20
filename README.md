@@ -20,7 +20,7 @@ Water the plants (@friday 6pm)
     or without `at` (`tomorrow at 9am`, `3pm friday`)
   - durations: `in 30 minutes`, `in an hour`, `in 3 days`, `in two weeks at 10am`
 
-  Everything is Mountain time. A date with no time goes off at 8am. A time with
+  Everything is Mountain time. A date with no time goes off at 9am. A time with
   no date is the next one, so `9am` written in the evening means tomorrow
   morning; a weekday whose time has already passed today means next week.
   Anything else (`next week`, a bare `9`) isn't guessed at: it shows up under

@@ -72,6 +72,19 @@ RSpec.describe Vault do
       end
     end
 
+    context "when a directive is inside code" do
+      it "skips it" do
+        write_note("Notes.md", <<~MARKDOWN)
+          ```ruby
+          File.write(@checkpoint_file, data)
+          ```
+          Use `filter(@start_date, @end_date)` here (@friday)
+        MARKDOWN
+
+        expect(described_class.new(vault_path).reminders.pluck(:directive)).to eq(["friday"])
+      end
+    end
+
     context "when parentheses don't start with @" do
       it "doesn't treat them as a directive" do
         write_note("Errands.md", "Call the dentist (the one on Main St) @ 9am")

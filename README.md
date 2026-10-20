@@ -170,13 +170,14 @@ is only reachable over Tailscale:
    bin/kamal ob login
    bin/kamal ob sync-list-remote
    bin/kamal ob 'sync-setup --vault "My Vault" --path /vault --device-name "Reminders server"'
-   bin/kamal ob 'sync-config --path /vault --mode pull-only --file-types "" --configs ""'
+   bin/kamal ob 'sync-config --path /vault --mode pull-only'
    bin/kamal accessory logs obsidian   # should show the first sync within a minute
    ```
-   `pull-only` makes the server download changes without ever uploading any,
-   and the empty `--file-types` and `--configs` skip attachments and Obsidian's
-   settings, since only notes are needed. Quote everything after `ob` so Kamal
-   passes the options through.
+   `pull-only` makes the server download changes without ever uploading any.
+   Obsidian's settings aren't synced by default. Attachments (images, audio,
+   PDFs, video) are, and Obsidian Headless has no way to turn them all off: an
+   empty `--file-types` resets it to that default. Quote everything after `ob`
+   so Kamal passes the options through.
 
 After that, `bin/kamal deploy` deploys new versions.
 

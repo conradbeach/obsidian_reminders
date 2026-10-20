@@ -29,15 +29,17 @@
   </section>
 <% end %>
 
-<section id="upcoming-reminders" class="rounded-xl bg-white p-4 shadow-sm">
+<div id="upcoming-reminders" class="space-y-4">
   <% if @upcoming_by_day.any? %>
     <% @upcoming_by_day.each do |date, reminders| %>
-      <h2 class="mt-4 font-semibold first:mt-0"><%= reminder_day_heading(date) %></h2>
-      <ul class="divide-y divide-gray-100"><%= render reminders %></ul>
+      <section class="rounded-xl bg-white p-4 shadow-sm">
+        <h2 class="font-semibold text-violet-800"><%= reminder_day_heading(date) %></h2>
+        <ul class="divide-y divide-gray-100"><%= render reminders %></ul>
+      </section>
     <% end %>
   <% else %>
-    <p class="text-gray-500">
+    <p class="rounded-xl bg-white p-4 text-gray-500 shadow-sm">
       Nothing coming up. Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
     </p>
   <% end %>
-</section>
+</div>

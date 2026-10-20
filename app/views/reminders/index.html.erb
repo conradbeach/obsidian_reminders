@@ -30,9 +30,12 @@
 <% end %>
 
 <nav id="reminder-filter" class="mb-4 grid grid-cols-2 rounded-lg bg-violet-100 p-1 text-center text-sm font-medium">
-  <% [["Today", root_path(show: "today"), @today_only], ["All", root_path, !@today_only]].each do |label, path, current| %>
-    <%= link_to label, path, aria: { current: current && "page" },
-          class: ["rounded-md py-1.5", current ? "bg-white text-violet-800 shadow-sm" : "text-violet-700"] %>
+  <% [["Today", true], ["All", false]].each do |label, today_only| %>
+    <% current = Current.user.show_today_only? == today_only %>
+    <%= button_to label, reminder_filter_path, method: :patch, params: { show_today_only: today_only },
+          aria: { pressed: current },
+          class: ["w-full rounded-md py-1.5 cursor-pointer",
+                  current ? "bg-white text-violet-800 shadow-sm" : "text-violet-700"] %>
   <% end %>
 </nav>
 
@@ -46,7 +49,7 @@
     <% end %>
   <% else %>
     <p class="rounded-xl bg-white p-4 text-gray-500 shadow-sm">
-      <%= @today_only ? "Nothing else today." : "Nothing coming up." %>
+      <%= Current.user.show_today_only? ? "Nothing else today." : "Nothing coming up." %>
       Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
     </p>
   <% end %>

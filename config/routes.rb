@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   resource :session
   resource :push_subscription, only: [:create, :destroy]
   resource :note_folders, only: [:edit, :update]
+  resource :reminder_filter, only: :update
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

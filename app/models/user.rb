@@ -12,6 +12,6 @@ class User < ApplicationRecord
 
   # Reminders from notes anywhere inside the user's folders.
   def reminders
-    Reminder.in_folders(note_folders)
+    Reminder.in_vault.in_folders(note_folders)
   end
 end

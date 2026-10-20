@@ -51,12 +51,30 @@ RSpec.describe Reminder do
     end
 
     context "when a reminder's directive is no longer in the vault" do
-      it "deletes the reminder" do
-        create(:reminder, line: "Pick up dry cleaning (@friday)", directive: "friday")
+      it "hides the reminder, then deletes it once it's been missing for five minutes" do
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", line: "Pick up dry cleaning (@friday)")
+        user = create(:user, note_folders: ["Tabitha"])
 
+        described_class.sync(vault_with)
+        expect(user.reminders).to be_empty
+        expect(described_class).to exist(reminder.id)
+
+        travel 5.minutes
+        described_class.sync(vault_with)
+        expect(described_class).to_not exist(reminder.id)
+      end
+    end
+
+    context "when a missing reminder comes back within five minutes" do
+      it "keeps its original time and sent state" do
+        reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, notified_at: 1.hour.ago)
+
+        described_class.sync(vault_with)
+        travel 4.minutes
         described_class.sync(vault_with(dentist))
 
-        expect(described_class.pluck(:line)).to eq([dentist[:line]])
+        expect(reminder.reload).to have_attributes(remind_at: now - 2.hours, notified_at: now - 1.hour,
+          missing_since: nil)
       end
     end
   end

@@ -63,6 +63,15 @@ RSpec.describe Vault do
       end
     end
 
+    context "when Obsidian Sync saved a conflicted copy of a note" do
+      it "skips the copy" do
+        write_note("Errands.md", "Call the dentist (@friday)")
+        write_note("Errands (Conflicted copy).md", "Call the dentist (@friday)")
+
+        expect(described_class.new(vault_path).reminders.pluck(:note_path)).to eq(["Errands.md"])
+      end
+    end
+
     context "when parentheses don't start with @" do
       it "doesn't treat them as a directive" do
         write_note("Errands.md", "Call the dentist (the one on Main St) @ 9am")

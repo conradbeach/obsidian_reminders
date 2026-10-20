@@ -51,6 +51,10 @@ Water the plants (@friday 6pm)
   Reminders aren't assigned to users when stored: `User#reminders` matches note
   paths against the user's folders whenever it's asked, so changing folders
   takes effect immediately.
+- A reminder that disappears from the vault is hidden at once but only deleted
+  after five minutes, so one that briefly vanishes (a scan reading a note while
+  Obsidian Headless rewrites it) comes back with its original time and isn't
+  sent twice. Obsidian Sync's "(Conflicted copy)" notes are skipped.
 - A notification that no device accepts is retried every minute for an hour. A
   reminder whose time is more than an hour past when the app first sees it is
   never sent, so editing an old note or unchecking an old task doesn't notify.

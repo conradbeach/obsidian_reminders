@@ -2,6 +2,8 @@
 class Vault
   DIRECTIVE = /\(@([^)]+)\)/
   COMPLETED_TASK = /\A\s*[-*+]\s+\[[xX]\]/
+  # Obsidian Sync's copy of a note it couldn't merge, which would repeat the note's reminders.
+  CONFLICTED_COPY = /\(conflicted copy/i
   HEADING = /\A\#{1,6}\s+(.+?)(?:\s+\#+)?\z/
 
   def initialize(path)
@@ -9,7 +11,7 @@ class Vault
   end
 
   # Attributes for each (@...) directive in the vault's notes, with the heading it's under, skipping completed tasks.
-  # Hidden folders such as .obsidian and .trash aren't searched.
+  # Hidden folders such as .obsidian and .trash aren't searched, and conflicted copies are skipped.
   def reminders
     notes.flat_map { |note| reminders_in(note) }.uniq
   end
@@ -17,7 +19,7 @@ class Vault
   private
 
   def notes
-    @path.glob("**/*.md")
+    @path.glob("**/*.md").reject { it.basename.to_s.match?(CONFLICTED_COPY) }
   end
 
   def reminders_in(note)

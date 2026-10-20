@@ -1,65 +1,69 @@
-<header class="mb-6 flex items-center justify-between">
-  <h1 class="flex items-center gap-3 text-2xl font-bold">
-    <%= image_tag "/icon.svg", alt: "", class: "size-9 rounded-lg" %>
-    Reminders
-  </h1>
-  <nav class="flex items-center gap-4 text-sm text-gray-500">
-    <%= link_to "Folders", edit_note_folders_path %>
-    <%= button_to "Sign out", session_path, method: :delete %>
-  </nav>
-</header>
+<% turbo_refreshes_with method: :morph, scroll: :preserve %>
 
-<% if notice %>
-  <p id="notice" class="mb-6 rounded-lg bg-green-50 px-3 py-2 font-medium text-green-700"><%= notice %></p>
-<% end %>
+<div data-controller="auto-refresh" data-auto-refresh-interval-value="<%= 20.seconds.in_milliseconds %>">
+  <header class="mb-6 flex items-center justify-between">
+    <h1 class="flex items-center gap-3 text-2xl font-bold">
+      <%= image_tag "/icon.svg", alt: "", class: "size-9 rounded-lg" %>
+      Reminders
+    </h1>
+    <nav class="flex items-center gap-4 text-sm text-gray-500">
+      <%= link_to "Folders", edit_note_folders_path %>
+      <%= button_to "Sign out", session_path, method: :delete %>
+    </nav>
+  </header>
 
-<%= render "push_notifications" %>
-
-<% if Current.user.note_folders.empty? %>
-  <section id="no-folders" class="mb-6 rounded-xl bg-white p-4 shadow-sm">
-    <p>Choose which folders in the vault hold your notes to see their reminders.</p>
-    <%= link_to "Choose folders", edit_note_folders_path, class: "btn-primary mt-3 inline-block" %>
-  </section>
-<% end %>
-
-<% if @overdue.any? %>
-  <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 p-4 shadow-sm">
-    <h2 class="font-semibold text-red-800">Overdue</h2>
-    <ul class="divide-y divide-red-100">
-      <%= render partial: "reminder", collection: @overdue, locals: { with_date: true } %>
-    </ul>
-  </section>
-<% end %>
-
-<% if @unscheduled.any? %>
-  <section id="unscheduled-reminders" class="mb-6 rounded-xl bg-amber-50 p-4 shadow-sm">
-    <h2 class="font-semibold text-amber-900">Needs a clearer time</h2>
-    <ul class="divide-y divide-amber-100"><%= render @unscheduled %></ul>
-  </section>
-<% end %>
-
-<nav id="reminder-filter" class="mb-4 grid grid-cols-2 rounded-lg bg-violet-100 p-1 text-center text-sm font-medium">
-  <% [["Today", true], ["All", false]].each do |label, today_only| %>
-    <% current = Current.user.show_today_only? == today_only %>
-    <%= button_to label, reminder_filter_path, method: :patch, params: { show_today_only: today_only },
-          aria: { pressed: current },
-          class: ["w-full rounded-md py-1.5 cursor-pointer",
-                  current ? "bg-white text-violet-800 shadow-sm" : "text-violet-700"] %>
+  <% if notice %>
+    <p id="notice" class="mb-6 rounded-lg bg-green-50 px-3 py-2 font-medium text-green-700"><%= notice %></p>
   <% end %>
-</nav>
 
-<div id="upcoming-reminders" class="space-y-4">
-  <% if @upcoming_by_day.any? %>
-    <% @upcoming_by_day.each do |date, reminders| %>
-      <section class="rounded-xl bg-white p-4 shadow-sm">
-        <h2 class="font-semibold text-violet-800"><%= reminder_day_heading(date) %></h2>
-        <ul class="divide-y divide-gray-100"><%= render reminders %></ul>
-      </section>
+  <%= render "push_notifications" %>
+
+  <% if Current.user.note_folders.empty? %>
+    <section id="no-folders" class="mb-6 rounded-xl bg-white p-4 shadow-sm">
+      <p>Choose which folders in the vault hold your notes to see their reminders.</p>
+      <%= link_to "Choose folders", edit_note_folders_path, class: "btn-primary mt-3 inline-block" %>
+    </section>
+  <% end %>
+
+  <% if @overdue.any? %>
+    <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 p-4 shadow-sm">
+      <h2 class="font-semibold text-red-800">Overdue</h2>
+      <ul class="divide-y divide-red-100">
+        <%= render partial: "reminder", collection: @overdue, locals: { with_date: true } %>
+      </ul>
+    </section>
+  <% end %>
+
+  <% if @unscheduled.any? %>
+    <section id="unscheduled-reminders" class="mb-6 rounded-xl bg-amber-50 p-4 shadow-sm">
+      <h2 class="font-semibold text-amber-900">Needs a clearer time</h2>
+      <ul class="divide-y divide-amber-100"><%= render @unscheduled %></ul>
+    </section>
+  <% end %>
+
+  <nav id="reminder-filter" class="mb-4 grid grid-cols-2 rounded-lg bg-violet-100 p-1 text-center text-sm font-medium">
+    <% [["Today", true], ["All", false]].each do |label, today_only| %>
+      <% current = Current.user.show_today_only? == today_only %>
+      <%= button_to label, reminder_filter_path, method: :patch, params: { show_today_only: today_only },
+            aria: { pressed: current },
+            class: ["w-full rounded-md py-1.5 cursor-pointer",
+                    current ? "bg-white text-violet-800 shadow-sm" : "text-violet-700"] %>
     <% end %>
-  <% else %>
-    <p class="rounded-xl bg-white p-4 text-gray-500 shadow-sm">
-      <%= Current.user.show_today_only? ? "Nothing else today." : "Nothing coming up." %>
-      Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
-    </p>
-  <% end %>
+  </nav>
+
+  <div id="upcoming-reminders" class="space-y-4">
+    <% if @upcoming_by_day.any? %>
+      <% @upcoming_by_day.each do |date, reminders| %>
+        <section class="rounded-xl bg-white p-4 shadow-sm">
+          <h2 class="font-semibold text-violet-800"><%= reminder_day_heading(date) %></h2>
+          <ul class="divide-y divide-gray-100"><%= render reminders %></ul>
+        </section>
+      <% end %>
+    <% else %>
+      <p class="rounded-xl bg-white p-4 text-gray-500 shadow-sm">
+        <%= Current.user.show_today_only? ? "Nothing else today." : "Nothing coming up." %>
+        Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
+      </p>
+    <% end %>
+  </div>
 </div>

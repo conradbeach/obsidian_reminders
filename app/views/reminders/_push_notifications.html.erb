@@ -1,5 +1,6 @@
 <% if (vapid_public_key = Rails.application.credentials.dig(:vapid, :public_key)) %>
-  <section id="push-notifications" class="mb-6 rounded-xl bg-white p-4 shadow-sm"
+  <%# Permanent, so refreshing the page doesn't undo the state the Stimulus controller shows. %>
+  <section id="push-notifications" class="mb-6 rounded-xl bg-white p-4 shadow-sm" data-turbo-permanent
     data-controller="push-notifications"
     data-push-notifications-vapid-public-key-value="<%= vapid_public_key %>"
     data-push-notifications-url-value="<%= push_subscription_path %>">

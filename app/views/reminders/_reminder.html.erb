@@ -1,14 +1,15 @@
-<li class="flex items-start justify-between gap-4 py-3">
-  <div class="min-w-0">
-    <p class="font-medium"><%= reminder.text %></p>
-    <p class="text-sm text-gray-500">
-      <% if reminder.remind_at %>
-        <%= reminder.remind_at.strftime(local_assigns[:with_date] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
-      <% else %>
-        Couldn't understand “<%= reminder.directive %>” ·
-      <% end %>
+<li class="py-3">
+  <p class="font-medium"><%= reminder.text %></p>
+  <p class="text-sm text-gray-500">
+    <% if reminder.remind_at %>
+      <%= reminder.remind_at.strftime(local_assigns[:with_date] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
+    <% else %>
+      Couldn't understand “<%= reminder.directive %>” ·
+    <% end %>
+    in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700" do %>
       <%= reminder.note_name %>
-    </p>
-  </div>
-  <%= link_to "Open", reminder.obsidian_url, class: "shrink-0 text-sm font-medium text-violet-700" %>
+      <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg>
+    <% end %>
+  </p>
 </li>

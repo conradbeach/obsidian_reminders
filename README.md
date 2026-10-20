@@ -33,7 +33,7 @@ Water the plants (@friday 6pm)
   reminders in notes anywhere inside them. A folder you both list is shared;
   reminders in notes outside everyone's folders are ignored.
 - Each reminder notifies each of its users' subscribed devices once. Tapping the notification
-  opens the app, where **Open** opens the note in Obsidian at the heading the
+  opens the app, where the note's name opens it in Obsidian at the heading the
   reminder is under (Obsidian links can't point to a line).
 - Checked-off tasks (`- [x]`) don't notify.
 - Editing anything on a reminder's line, even a typo, makes it a new reminder

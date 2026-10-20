@@ -11,7 +11,7 @@ RSpec.describe "Reminders" do
 
     within("#upcoming-reminders") do
       expect(page).to have_content("Call the dentist")
-      expect(page).to have_link("Open", href: "obsidian://open?vault=Vault&file=Tabitha%2FErrands")
+      expect(page).to have_link("Errands", href: "obsidian://open?vault=Vault&file=Tabitha%2FErrands")
     end
   end
 

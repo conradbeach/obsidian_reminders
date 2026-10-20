@@ -2,6 +2,8 @@ class Reminder < ApplicationRecord
   # Undelivered reminders are retried for this long. Reminders first found already this far past are never sent,
   # so editing an old note doesn't notify about it again.
   DELIVERY_WINDOW = 1.hour
+  # A reminder is the same reminder as long as its note, line, and directive are unchanged.
+  IDENTITY = [:note_path, :line, :directive].freeze
   LIST_MARKER = /\A(?:[-*+]|\d+\.)\s+(?:\[.\]\s+)?/
 
   scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
@@ -14,17 +16,24 @@ class Reminder < ApplicationRecord
   scope :due, -> { where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
 
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
-  # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted.
+  # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted. A reminder whose line is
+  # now under a different heading keeps its time.
   def self.sync(vault)
-    unmatched = all.index_by { it.slice(:note_path, :line, :directive).symbolize_keys }
+    unmatched = all.index_by { it.slice(*IDENTITY).symbolize_keys }
 
     transaction do
       vault.reminders.each do |attributes|
-        unmatched.delete(attributes) || create!(**attributes, remind_at: Directive.new(attributes[:directive]).time)
+        reminder = unmatched.delete(attributes.slice(*IDENTITY)) || scheduled(attributes)
+        reminder.update!(heading: attributes[:heading])
       end
       where(id: unmatched.values.map(&:id)).delete_all
     end
   end
+
+  def self.scheduled(attributes)
+    new(attributes.slice(*IDENTITY).merge(remind_at: Directive.new(attributes[:directive]).time))
+  end
+  private_class_method :scheduled
 
   def self.notify_due
     due.find_each(&:notify)
@@ -50,8 +59,9 @@ class Reminder < ApplicationRecord
     File.basename(note_path, ".md")
   end
 
+  # Opens the note at the reminder's heading, since Obsidian can't open a note at a line.
   def obsidian_url
-    vault = ERB::Util.url_encode(Rails.configuration.x.vault_name)
-    "obsidian://open?vault=#{vault}&file=#{ERB::Util.url_encode(note_path)}"
+    file = [note_path.delete_suffix(".md"), heading].compact.join("#")
+    "obsidian://open?vault=#{ERB::Util.url_encode(Rails.configuration.x.vault_name)}&file=#{ERB::Util.url_encode(file)}"
   end
 end

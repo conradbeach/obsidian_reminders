@@ -2,13 +2,14 @@
 class Vault
   DIRECTIVE = /\(@([^)]+)\)/
   COMPLETED_TASK = /\A\s*[-*+]\s+\[[xX]\]/
+  HEADING = /\A\#{1,6}\s+(.+?)(?:\s+\#+)?\z/
 
   def initialize(path)
     @path = Pathname(path)
   end
 
-  # Attributes for each (@...) directive in the vault's notes, skipping completed tasks. Hidden folders such as
-  # .obsidian and .trash aren't searched.
+  # Attributes for each (@...) directive in the vault's notes, with the heading it's under, skipping completed tasks.
+  # Hidden folders such as .obsidian and .trash aren't searched.
   def reminders
     notes.flat_map { |note| reminders_in(note) }.uniq
   end
@@ -21,12 +22,14 @@ class Vault
 
   def reminders_in(note)
     note_path = note.relative_path_from(@path).to_s
+    heading = nil
 
     note.each_line.flat_map do |line|
       line = line.strip
+      heading = Regexp.last_match(1) if line.match(HEADING)
       next [] if line.match?(COMPLETED_TASK)
 
-      line.scan(DIRECTIVE).map { |(directive)| { note_path:, line:, directive: directive.strip } }
+      line.scan(DIRECTIVE).map { |(directive)| { note_path:, line:, directive: directive.strip, heading: } }
     end
   end
 end

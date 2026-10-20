@@ -40,6 +40,16 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when a reminder's line is now under a different heading" do
+      it "updates the heading without rescheduling the reminder" do
+        reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, heading: "Errands")
+
+        described_class.sync(vault_with(dentist.merge(heading: "This week")))
+
+        expect(described_class.sole).to have_attributes(id: reminder.id, remind_at: 2.hours.ago, heading: "This week")
+      end
+    end
+
     context "when a reminder's directive is no longer in the vault" do
       it "deletes the reminder" do
         create(:reminder, line: "Pick up dry cleaning (@friday)", directive: "friday")
@@ -131,10 +141,20 @@ RSpec.describe Reminder do
   end
 
   describe "#obsidian_url" do
-    it "links to the note in the vault" do
-      reminder = build(:reminder, note_path: "Home/Car registration.md")
+    context "when the reminder is under a heading" do
+      it "links to the heading in the note" do
+        reminder = build(:reminder, note_path: "Home/Car registration.md", heading: "This year")
 
-      expect(reminder.obsidian_url).to eq("obsidian://open?vault=Vault&file=Home%2FCar%20registration.md")
+        expect(reminder.obsidian_url).to eq("obsidian://open?vault=Vault&file=Home%2FCar%20registration%23This%20year")
+      end
+    end
+
+    context "when the reminder isn't under a heading" do
+      it "links to the note" do
+        reminder = build(:reminder, note_path: "Home/Car registration.md", heading: nil)
+
+        expect(reminder.obsidian_url).to eq("obsidian://open?vault=Vault&file=Home%2FCar%20registration")
+      end
     end
   end
 end

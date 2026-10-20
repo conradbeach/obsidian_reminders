@@ -13,12 +13,27 @@ RSpec.describe Vault do
 
   describe "#reminders" do
     context "when a note has a directive" do
-      it "returns the note path, the line, and the directive's contents" do
+      it "returns the note path, the line, the directive's contents, and the heading it's under" do
         write_note("Home/Errands.md", "# Errands\n\n- [ ] Call the dentist (@tomorrow 9am)\n")
 
         expect(described_class.new(vault_path).reminders).to contain_exactly(
-          { note_path: "Home/Errands.md", line: "- [ ] Call the dentist (@tomorrow 9am)", directive: "tomorrow 9am" },
+          { note_path: "Home/Errands.md", line: "- [ ] Call the dentist (@tomorrow 9am)", directive: "tomorrow 9am",
+            heading: "Errands" },
         )
+      end
+    end
+
+    context "when a note has several headings" do
+      it "gives each directive the nearest heading above it, if any" do
+        write_note("Errands.md", <<~MARKDOWN)
+          Before any heading (@friday)
+          # Errands
+          ## This week ##
+          Call the dentist (@friday)
+          #not-a-heading (@friday)
+        MARKDOWN
+
+        expect(described_class.new(vault_path).reminders.pluck(:heading)).to eq([nil, "This week", "This week"])
       end
     end
 

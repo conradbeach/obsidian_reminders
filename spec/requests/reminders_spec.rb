@@ -42,6 +42,21 @@ RSpec.describe "Reminders" do
       end
     end
 
+    it "lists every overdue reminder still in the vault, oldest first, with its date" do
+      travel_to Time.zone.parse("2026-10-19 18:00")
+      sign_in create(:user, note_folders: ["Tabitha"])
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Call the dentist (@9am)",
+        remind_at: Time.zone.parse("2026-10-19 09:00"))
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Return library books (@Jan 5)",
+        remind_at: Time.zone.parse("2026-01-05 08:00"))
+
+      get root_path
+
+      overdue = response.parsed_body.css("#overdue-reminders li")
+      expect(overdue.map { it.at_css("p.font-medium").text }).to eq(["Return library books", "Call the dentist"])
+      expect(overdue.first.text).to include("Mon, Jan 5 at 8:00 AM")
+    end
+
     it "lists the user's reminders whose time couldn't be understood" do
       sign_in create(:user, note_folders: ["Tabitha"])
       create(:reminder, note_path: "Tabitha/Garden.md", line: "Water the plants (@whenever)", directive: "whenever",

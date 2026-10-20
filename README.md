@@ -35,8 +35,14 @@ Water the plants (@friday 6pm)
 - Each reminder notifies each of its users' subscribed devices once. Tapping the notification
   opens the app, where **Open** opens the note in Obsidian at the heading the
   reminder is under (Obsidian links can't point to a line).
-- Checked-off tasks (`- [x]`) don't notify. Editing a reminder's line counts as
-  a new reminder, so changing the time reschedules it.
+- Checked-off tasks (`- [x]`) don't notify.
+- Editing anything on a reminder's line, even a typo, makes it a new reminder
+  whose time is read again at that moment. A relative directive has to be
+  updated along with the edit: fixing a typo tomorrow in a `(@tomorrow)`
+  reminder means changing it to `(@today)` too. Absolute dates (`Oct 21 3pm`)
+  are unaffected unless the date has passed.
+- Reminders whose time has passed stay under **Overdue**, however old, until
+  they're checked off or removed from the note.
 
 ## How it works
 

@@ -22,6 +22,15 @@
   </section>
 <% end %>
 
+<% if @overdue.any? %>
+  <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 p-4 shadow-sm">
+    <h2 class="font-semibold text-red-800">Overdue</h2>
+    <ul class="divide-y divide-red-100">
+      <%= render partial: "reminder", collection: @overdue, locals: { with_date: true } %>
+    </ul>
+  </section>
+<% end %>
+
 <% if @unscheduled.any? %>
   <section id="unscheduled-reminders" class="mb-6 rounded-xl bg-amber-50 p-4 shadow-sm">
     <h2 class="font-semibold text-amber-900">Needs a clearer time</h2>

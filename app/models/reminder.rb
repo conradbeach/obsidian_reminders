@@ -2,8 +2,6 @@ class Reminder < ApplicationRecord
   # Undelivered reminders are retried for this long. Reminders first found already this far past are never sent,
   # so editing an old note doesn't notify about it again.
   DELIVERY_WINDOW = 1.hour
-  # Reminders with only a date ("friday", "Oct 21") go off at 8am.
-  DATE_ONLY_HOUR = 8
   LIST_MARKER = /\A(?:[-*+]|\d+\.)\s+(?:\[.\]\s+)?/
 
   scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
@@ -17,18 +15,10 @@ class Reminder < ApplicationRecord
 
     transaction do
       vault.reminders.each do |attributes|
-        unmatched.delete(attributes) || create!(**attributes, remind_at: parse_time(attributes[:directive]))
+        unmatched.delete(attributes) || create!(**attributes, remind_at: Directive.new(attributes[:directive]).time)
       end
       where(id: unmatched.values.map(&:id)).delete_all
     end
-  end
-
-  def self.parse_time(directive)
-    span = Chronic.parse(directive, context: :future, guess: false)
-    return unless span
-
-    # A day is 23 hours long when daylight saving time starts.
-    span.width >= 23.hours ? span.begin.change(hour: DATE_ONLY_HOUR) : span.begin
   end
 
   def self.notify_due

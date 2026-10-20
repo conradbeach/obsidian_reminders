@@ -13,19 +13,25 @@ Put `(@` + a time + `)` anywhere in a note:
 Water the plants (@friday 6pm)
 ```
 
-- Times are parsed with [Chronic](https://github.com/mojombo/chronic):
-  `tomorrow 9am`, `Oct 21 3:30pm`, `2026-10-21 15:00`, `10/21 7pm`, `friday`,
-  `in 2 hours`. A date with no time (`Nov 1`, `friday`) goes off at 8am.
-  Everything is Mountain time.
+- Times are parsed by `Reminder::Directive`, which understands:
+  - dates: `today`, `tomorrow`, weekdays (`friday`, `fri`, `next friday`),
+    `Oct 21`, `October 21st 2027`, `21 Oct`, `10/21`, `10/21/26`, `2026-10-21`
+  - times: `9am`, `9:30 p.m.`, `21:00`, `noon`, before or after the date, with
+    or without `at` (`tomorrow at 9am`, `3pm friday`)
+  - durations: `in 30 minutes`, `in an hour`, `in 3 days`, `in two weeks at 10am`
+
+  Everything is Mountain time. A date with no time goes off at 8am. A time with
+  no date is the next one, so `9am` written in the evening means tomorrow
+  morning; a weekday whose time has already passed today means next week.
+  Anything else (`next week`, a bare `9`) isn't guessed at: it shows up under
+  **Needs a clearer time**.
 - Relative times are measured from when the app first sees the reminder, about
   a minute after the note syncs. Once seen, a reminder keeps its time even if the
   words would mean something else later ("tomorrow" stays that tomorrow).
-- A time on its own (`9am`) means today, even if 9am has already passed.
 - Each reminder notifies every subscribed device once. Tapping the notification
   opens the app, where **Open** opens the note in Obsidian.
 - Checked-off tasks (`- [x]`) don't notify. Editing a reminder's line counts as
   a new reminder, so changing the time reschedules it.
-- Reminders the app can't understand are listed under **Needs a clearer time**.
 
 ## How it works
 

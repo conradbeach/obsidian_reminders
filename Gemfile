@@ -28,7 +28,6 @@ gem "solid_cable"
 gem "solid_cache"
 gem "solid_queue"
 
-gem "chronic"
 gem "mission_control-jobs"
 gem "web-push"
 

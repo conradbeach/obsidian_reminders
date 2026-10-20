@@ -6,40 +6,6 @@ RSpec.describe Reminder do
 
   before { travel_to now }
 
-  describe ".parse_time" do
-    context "when the directive has a date and time" do
-      it "returns that time" do
-        expect(described_class.parse_time("Oct 21 3:30pm")).to eq(Time.zone.parse("2026-10-21 15:30"))
-      end
-    end
-
-    context "when the directive is relative" do
-      it "returns the time relative to now" do
-        expect(described_class.parse_time("tomorrow 9am")).to eq(Time.zone.parse("2026-10-20 09:00"))
-        expect(described_class.parse_time("in 2 hours")).to eq(Time.zone.parse("2026-10-19 20:00"))
-      end
-    end
-
-    context "when the directive has only a date" do
-      it "returns 8am on that date" do
-        expect(described_class.parse_time("2026-10-21")).to eq(Time.zone.parse("2026-10-21 08:00"))
-        expect(described_class.parse_time("friday")).to eq(Time.zone.parse("2026-10-23 08:00"))
-      end
-    end
-
-    context "when the date is the day daylight saving time ends" do
-      it "returns 8am on that date" do
-        expect(described_class.parse_time("Nov 1")).to eq(Time.zone.parse("2026-11-01 08:00"))
-      end
-    end
-
-    context "when the directive isn't a time" do
-      it "returns nil" do
-        expect(described_class.parse_time("whenever")).to be_nil
-      end
-    end
-  end
-
   describe ".sync" do
     def vault_with(*reminders)
       instance_double(Vault, reminders:)

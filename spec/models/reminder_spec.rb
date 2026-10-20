@@ -55,21 +55,26 @@ RSpec.describe Reminder do
     before { allow(WebPush).to receive(:payload_send) }
 
     context "when a reminder's time has come" do
-      it "notifies every device and marks the reminder notified" do
-        create(:push_subscription)
-        reminder = create(:reminder, note_path: "Errands.md", line: "Call the dentist (@6pm)", remind_at: 1.minute.ago)
+      it "notifies the devices of users whose folders contain the note and marks the reminder notified" do
+        tabitha = create(:user, note_folders: ["Tabitha"])
+        create(:push_subscription, user: tabitha, endpoint: "https://web.push.apple.com/tabitha")
+        create(:push_subscription, user: create(:user, note_folders: ["Conrad"]))
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", line: "Call the dentist (@6pm)",
+          remind_at: 1.minute.ago)
 
         described_class.notify_due
 
         message = { title: "Call the dentist", options: { body: "Errands", data: { path: "/" } } }.to_json
-        expect(WebPush).to have_received(:payload_send).with(hash_including(message:))
+        expect(WebPush).to have_received(:payload_send).once
+          .with(hash_including(endpoint: "https://web.push.apple.com/tabitha", message:))
         expect(reminder.reload.notified_at).to eq(now)
       end
     end
 
-    context "when no device accepts the notification" do
+    context "when no recipient's device accepts the notification" do
       it "leaves the reminder unsent to retry" do
-        reminder = create(:reminder, remind_at: 1.minute.ago)
+        create(:user, note_folders: ["Tabitha"])
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.ago)
 
         described_class.notify_due
 
@@ -77,12 +82,23 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when the note isn't in anyone's folders" do
+      it "doesn't notify about it" do
+        create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
+        create(:reminder, note_path: "Archive/Errands.md", remind_at: 1.minute.ago)
+
+        described_class.notify_due
+
+        expect(WebPush).to_not have_received(:payload_send)
+      end
+    end
+
     context "when a reminder is in the future, already sent, or more than an hour past" do
       it "doesn't notify about it" do
-        create(:push_subscription)
-        create(:reminder, remind_at: 1.minute.from_now)
-        create(:reminder, remind_at: 1.minute.ago, notified_at: 1.minute.ago)
-        create(:reminder, remind_at: 61.minutes.ago)
+        create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
+        create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.from_now)
+        create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.ago, notified_at: 1.minute.ago)
+        create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 61.minutes.ago)
 
         described_class.notify_due
 

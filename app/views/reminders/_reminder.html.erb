@@ -3,7 +3,7 @@
     <p class="font-medium"><%= reminder.text %></p>
     <p class="text-sm text-gray-500">
       <% if reminder.remind_at %>
-        <%= reminder.remind_at.to_fs(:reminder) %> ·
+        <%= reminder.remind_at.strftime("%-l:%M %p") %> ·
       <% else %>
         Couldn't understand “<%= reminder.directive %>” ·
       <% end %>

@@ -2,25 +2,48 @@ require "rails_helper"
 
 RSpec.describe "Reminders" do
   describe "GET /" do
-    it "lists upcoming reminders soonest first, without past ones" do
-      sign_in
-      create(:reminder, line: "Renew passport (@Dec 1)", remind_at: 2.months.from_now)
-      create(:reminder, line: "Call the dentist (@tomorrow 9am)", remind_at: 1.day.from_now)
-      create(:reminder, line: "Pay rent (@Oct 1)", remind_at: 1.day.ago)
+    it "lists upcoming reminders grouped by day, soonest first" do
+      travel_to Time.zone.parse("2026-10-19 18:00")
+      sign_in create(:user, note_folders: ["Tabitha"])
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Renew passport (@Dec 1)",
+        remind_at: Time.zone.parse("2026-12-01 08:00"))
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Call the dentist (@tomorrow 9am)",
+        remind_at: Time.zone.parse("2026-10-20 09:00"))
 
       get root_path
 
-      upcoming = response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)
-      expect(upcoming).to eq(["Call the dentist", "Renew passport"])
+      upcoming = response.parsed_body.css("#upcoming-reminders h2, #upcoming-reminders li p.font-medium").map(&:text)
+      expect(upcoming).to eq(["Tomorrow", "Call the dentist", "Tue, Dec 1", "Renew passport"])
     end
 
-    it "lists reminders whose time couldn't be understood" do
-      sign_in
-      create(:reminder, line: "Water the plants (@whenever)", directive: "whenever", remind_at: nil)
+    it "leaves out past reminders and other users' reminders" do
+      sign_in create(:user, note_folders: ["Tabitha"])
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Pay rent (@Oct 1)", remind_at: 1.day.ago)
+      create(:reminder, note_path: "Conrad/Errands.md", line: "Change the oil (@tomorrow)", remind_at: 1.day.from_now)
+
+      get root_path
+
+      expect(response.parsed_body.css("#upcoming-reminders li")).to be_empty
+    end
+
+    it "lists the user's reminders whose time couldn't be understood" do
+      sign_in create(:user, note_folders: ["Tabitha"])
+      create(:reminder, note_path: "Tabitha/Garden.md", line: "Water the plants (@whenever)", directive: "whenever",
+        remind_at: nil)
 
       get root_path
 
       expect(response.parsed_body.css("#unscheduled-reminders").text).to include("Couldn't understand “whenever”")
+    end
+
+    context "when the user hasn't chosen any folders" do
+      it "asks them to choose folders" do
+        sign_in create(:user, note_folders: [])
+
+        get root_path
+
+        expect(response.parsed_body.css("#no-folders a").first["href"]).to eq(edit_note_folders_path)
+      end
     end
   end
 end

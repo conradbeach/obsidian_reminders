@@ -28,7 +28,11 @@ Water the plants (@friday 6pm)
 - Relative times are measured from when the app first sees the reminder, about
   a minute after the note syncs. Once seen, a reminder keeps its time even if the
   words would mean something else later ("tomorrow" stays that tomorrow).
-- Each reminder notifies every subscribed device once. Tapping the notification
+- Reminders belong to whoever's folders contain the note. Each user lists their
+  folders under **Folders** (say, `Tabitha`), and sees and is notified about
+  reminders in notes anywhere inside them. A folder you both list is shared;
+  reminders in notes outside everyone's folders are ignored.
+- Each reminder notifies each of its users' subscribed devices once. Tapping the notification
   opens the app, where **Open** opens the note in Obsidian.
 - Checked-off tasks (`- [x]`) don't notify. Editing a reminder's line counts as
   a new reminder, so changing the time reschedules it.
@@ -43,6 +47,9 @@ Water the plants (@friday 6pm)
   every Markdown file in the vault for directives (`Vault`), stores new ones as
   `Reminder`s and deletes ones that are gone (`Reminder.sync`), then sends push
   notifications for reminders that have come due (`Reminder.notify_due`).
+  Reminders aren't assigned to users when stored: `User#reminders` matches note
+  paths against the user's folders whenever it's asked, so changing folders
+  takes effect immediately.
 - A notification that no device accepts is retried every minute for an hour. A
   reminder whose time is more than an hour past when the app first sees it is
   never sent, so editing an old note or unchecking an old task doesn't notify.
@@ -59,7 +66,7 @@ npx playwright install chromium
 Create a user in `bin/rails console`:
 
 ```ruby
-User.create!(email_address: "me@example.com", password: "a long password")
+User.create!(email_address: "me@example.com", password: "a long password", note_folders: ["Conrad"])
 ```
 
 Reminders are read from `tmp/vault` unless `VAULT_PATH` points elsewhere. Put

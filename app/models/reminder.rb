@@ -6,6 +6,10 @@ class Reminder < ApplicationRecord
 
   scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
   scope :unscheduled, -> { where(remind_at: nil).order(:note_path, :line) }
+  scope :in_folders, lambda { |folders|
+    conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }
+    conditions.any? ? where(conditions.reduce(:or)) : none
+  }
   scope :due, -> { where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
 
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
@@ -25,9 +29,15 @@ class Reminder < ApplicationRecord
     due.find_each(&:notify)
   end
 
-  # Stays unsent, to be retried, when no device accepts the notification.
+  # Stays unsent, to be retried, when none of the recipients' devices accept the notification.
   def notify
-    update!(notified_at: Time.current) if PushSubscription.deliver_to_all(title: text, body: note_name, path: "/")
+    subscriptions = PushSubscription.where(user: recipients)
+    update!(notified_at: Time.current) if subscriptions.deliver_to_all(title: text, body: note_name, path: "/")
+  end
+
+  # The users whose folders contain the reminder's note.
+  def recipients
+    User.all.select { it.reminders.exists?(id) }
   end
 
   # The line without its list marker, checkbox, or directives.

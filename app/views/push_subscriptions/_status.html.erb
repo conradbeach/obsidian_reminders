@@ -1,0 +1,32 @@
+<%# locals: (id:, alert: false) %>
+<%# As an alert, only problems show: nothing appears while this device gets notifications. %>
+<% if (vapid_public_key = Rails.application.credentials.dig(:vapid, :public_key)) %>
+  <% state_class = alert ? "mb-6 rounded-xl bg-amber-50 p-4 text-amber-900 shadow-sm" : "" %>
+  <%# Permanent as an alert, so the list refreshing doesn't undo the state the Stimulus controller shows. %>
+  <section id="<%= id %>" <%= "data-turbo-permanent" if alert %>
+    data-controller="push-notifications"
+    data-push-notifications-vapid-public-key-value="<%= vapid_public_key %>"
+    data-push-notifications-url-value="<%= push_subscription_path %>">
+    <p data-push-notifications-target="unsupported" hidden class="<%= state_class %>">
+      To get notified on an iPhone, tap Share → Add to Home Screen, then open Reminders from the Home Screen and
+      turn on notifications there.
+    </p>
+    <p data-push-notifications-target="denied" hidden class="<%= state_class %>">
+      Notifications are blocked for this site. Allow them in your browser or phone settings to be notified.
+    </p>
+    <p data-push-notifications-target="disabled" hidden class="flex items-center justify-between gap-4 <%= state_class %>">
+      Notifications are off on this device.
+      <button type="button" class="btn-primary" data-action="push-notifications#enable">Turn on</button>
+    </p>
+    <p data-push-notifications-target="enabled" hidden class="flex items-center justify-between gap-4">
+      <% unless alert %>
+        This device gets reminder notifications.
+        <button type="button" class="btn-secondary" data-action="push-notifications#disable">Turn off</button>
+      <% end %>
+    </p>
+    <p data-push-notifications-target="failed" hidden class="flex items-center justify-between gap-4 <%= state_class %>">
+      Notifications couldn't be turned on for this device.
+      <button type="button" class="btn-primary" data-action="push-notifications#enable">Try again</button>
+    </p>
+  </section>
+<% end %>

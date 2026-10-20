@@ -73,7 +73,7 @@ RSpec.describe "Reminders" do
 
         get root_path
 
-        expect(response.parsed_body.css("#no-folders a").first["href"]).to eq(edit_note_folders_path)
+        expect(response.parsed_body.css("#no-folders a").first["href"]).to eq(settings_path(anchor: "folders"))
       end
     end
   end

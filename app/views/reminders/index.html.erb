@@ -7,21 +7,17 @@
       Reminders
     </h1>
     <nav class="flex items-center gap-4 text-sm text-gray-500">
-      <%= link_to "Folders", edit_note_folders_path %>
+      <%= link_to "Settings", settings_path %>
       <%= button_to "Sign out", session_path, method: :delete %>
     </nav>
   </header>
 
-  <% if notice %>
-    <p id="notice" class="mb-6 rounded-lg bg-green-50 px-3 py-2 font-medium text-green-700"><%= notice %></p>
-  <% end %>
-
-  <%= render "push_notifications" %>
+  <%= render "push_subscriptions/status", id: "push-notification-alert", alert: true %>
 
   <% if Current.user.note_folders.empty? %>
     <section id="no-folders" class="mb-6 rounded-xl bg-white p-4 shadow-sm">
       <p>Choose which folders in the vault hold your notes to see their reminders.</p>
-      <%= link_to "Choose folders", edit_note_folders_path, class: "btn-primary mt-3 inline-block" %>
+      <%= link_to "Choose folders", settings_path(anchor: "folders"), class: "btn-primary mt-3 inline-block" %>
     </section>
   <% end %>
 

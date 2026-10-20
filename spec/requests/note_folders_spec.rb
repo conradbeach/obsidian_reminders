@@ -7,7 +7,7 @@ RSpec.describe "Note folders" do
 
       patch note_folders_path, params: { note_folders: "Tabitha\r\n/Family/Errands/\r\n" }
 
-      expect(response).to redirect_to(root_path)
+      expect(response).to redirect_to(settings_path)
       expect(user.reload.note_folders).to eq(["Tabitha", "Family/Errands"])
     end
   end

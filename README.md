@@ -29,7 +29,7 @@ Water the plants (@friday 6pm)
   a minute after the note syncs. Once seen, a reminder keeps its time even if the
   words would mean something else later ("tomorrow" stays that tomorrow).
 - Reminders belong to whoever's folders contain the note. Each user lists their
-  folders under **Folders** (say, `Tabitha`), and sees and is notified about
+  folders in **Settings** (say, `Tabitha`), and sees and is notified about
   reminders in notes anywhere inside them. A folder you both list is shared;
   reminders in notes outside everyone's folders are ignored.
 - Each reminder notifies each of its users' subscribed devices once. Tapping the notification
@@ -188,7 +188,9 @@ iOS only allows push notifications for web apps added to the Home Screen
 
 1. Open the app's `https://reminders.<tailnet>.ts.net` URL in Safari and sign in.
 2. Share → **Add to Home Screen**.
-3. Open Reminders from the Home Screen and tap **Notify me about reminders**.
+3. Open Reminders from the Home Screen and tap **Turn on** in the notifications
+   banner. The banner only appears while notifications aren't working; they can
+   be turned off for a device in **Settings**.
 
 Each phone subscribes separately.
 

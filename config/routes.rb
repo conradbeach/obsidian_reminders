@@ -1,7 +1,8 @@
 Rails.application.routes.draw do
   resource :session
   resource :push_subscription, only: [:create, :destroy]
-  resource :note_folders, only: [:edit, :update]
+  resource :settings, only: :show
+  resource :note_folders, only: :update
   resource :reminder_filter, only: :update
   mount MissionControl::Jobs::Engine, at: "/jobs"
 

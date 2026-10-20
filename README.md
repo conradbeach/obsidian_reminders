@@ -48,8 +48,9 @@ Water the plants (@friday 6pm)
 
 - **Obsidian Headless** ([`ob`](https://obsidian.md/help/sync/headless)) runs as
   a Kamal accessory and keeps a download-only copy of the vault in sync with
-  Obsidian Sync. The app mounts that copy read-only, so it can never change her
-  notes.
+  Obsidian Sync, running a one-shot `ob sync` every 30 seconds (its continuous
+  mode silently stopped receiving changes). The app mounts that copy read-only,
+  so it can never change her notes.
 - `CheckRemindersJob` runs every minute (Solid Queue recurring task). It scans
   every Markdown file in the vault for directives (`Vault`), stores new ones as
   `Reminder`s and deletes ones that are gone (`Reminder.sync`), then sends push

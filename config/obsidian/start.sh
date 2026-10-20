@@ -14,5 +14,10 @@ exec setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/home/node sh -ec
     sleep 60
   done
 
-  exec "$ob" sync --path /vault --continuous
+  # A fresh one-shot sync every 30 seconds rather than continuous mode, whose connection can go stale: it kept
+  # logging "Fully synced" while missing changes until restarted.
+  while true; do
+    "$ob" sync --path /vault || echo "Sync failed; retrying in 30 seconds"
+    sleep 30
+  done
 '

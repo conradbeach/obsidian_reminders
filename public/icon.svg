@@ -1,3 +1,28 @@
-<svg width="512" height="512" xmlns="http://www.w3.org/2000/svg">
-  <circle cx="256" cy="256" r="256" fill="red"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>Reminders</title>
+  <desc>A white rounded checkbox and checkmark on warm violet, with a peach notification dot.</desc>
+  <defs>
+    <linearGradient id="background" x1="48" y1="0" x2="456" y2="512" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#9771E9"/>
+      <stop offset="0.52" stop-color="#7953D4"/>
+      <stop offset="1" stop-color="#5840B5"/>
+    </linearGradient>
+    <linearGradient id="paper" x1="256" y1="136" x2="256" y2="376" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFFFFF"/>
+      <stop offset="1" stop-color="#F4EFFF"/>
+    </linearGradient>
+  </defs>
+  <!-- Full-bleed background; all foreground artwork fits the maskable safe circle. -->
+  <path fill="url(#background)" d="M0 0h512v512H0z"/>
+  <!-- Offset silhouettes add quiet depth without blur or raster effects. -->
+  <g fill="none" stroke="#382174" stroke-opacity="0.16" stroke-linecap="round" stroke-linejoin="round" transform="translate(0 8)">
+    <rect x="132" y="132" width="248" height="248" rx="60" stroke-width="24"/>
+    <path d="m193 257 44 44 82-91" stroke-width="30"/>
+  </g>
+  <rect x="132" y="132" width="248" height="248" rx="60" fill="#FFFFFF" fill-opacity="0.055" stroke="url(#paper)" stroke-width="24"/>
+  <path d="m193 257 44 44 82-91" fill="none" stroke="url(#paper)" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- A violet halo separates the notification dot from the checkbox. -->
+  <circle cx="369" cy="143" r="39" fill="#805AD9"/>
+  <circle cx="369" cy="146" r="28" fill="#492B89" fill-opacity="0.18"/>
+  <circle cx="369" cy="143" r="28" fill="#FFD19B"/>
 </svg>

@@ -1,0 +1,27 @@
+<% if (vapid_public_key = Rails.application.credentials.dig(:vapid, :public_key)) %>
+  <section id="push-notifications" class="mb-6 rounded-xl bg-white p-4 shadow-sm"
+    data-controller="push-notifications"
+    data-push-notifications-vapid-public-key-value="<%= vapid_public_key %>"
+    data-push-notifications-url-value="<%= push_subscription_path %>">
+    <p data-push-notifications-target="unsupported" hidden>
+      To get notified on an iPhone, tap Share → Add to Home Screen, then open Reminders from the Home Screen and
+      turn on notifications there.
+    </p>
+    <p data-push-notifications-target="denied" hidden>
+      Notifications are blocked for this site. Allow them in your browser or phone settings to be notified.
+    </p>
+    <p data-push-notifications-target="disabled" hidden>
+      <button type="button" class="btn-primary" data-action="push-notifications#enable">
+        Notify me about reminders
+      </button>
+    </p>
+    <p data-push-notifications-target="enabled" hidden class="flex items-center justify-between gap-4">
+      This device gets reminder notifications.
+      <button type="button" class="btn-secondary" data-action="push-notifications#disable">Turn off</button>
+    </p>
+    <p data-push-notifications-target="failed" hidden class="flex items-center justify-between gap-4">
+      Notifications couldn't be turned on for this device.
+      <button type="button" class="btn-primary" data-action="push-notifications#enable">Try again</button>
+    </p>
+  </section>
+<% end %>

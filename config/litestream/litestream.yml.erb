@@ -1,0 +1,23 @@
+<% require File.expand_path(".kamal/credentials") %>
+# Litestream configuration for the Kamal accessory in config/deploy.yml.
+# Only the primary database is replicated; the cache, queue, and cable
+# databases hold disposable data.
+snapshot:
+  interval: 24h
+  retention: 720h
+
+# Each check lists the bucket twice to find local files that are safely in R2.
+# The 15s default would use about a third of R2's free 1 million monthly
+# Class A operations even while idle; uploads still happen as changes occur.
+l0-retention-check-interval: 1h
+
+dbs:
+  - path: /rails/storage/production.sqlite3
+    replica:
+      type: s3
+      endpoint: <%= KAMAL_CREDENTIALS.dig(:litestream, :endpoint) %>
+      region: auto
+      bucket: <%= KAMAL_CREDENTIALS.dig(:litestream, :bucket) %>
+      path: production.sqlite3
+      access-key-id: <%= KAMAL_CREDENTIALS.dig(:litestream, :access_key_id) %>
+      secret-access-key: <%= KAMAL_CREDENTIALS.dig(:litestream, :secret_access_key) %>

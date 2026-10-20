@@ -26,17 +26,26 @@ module ObsidianReminders
     # Please, add to the `ignore` list any other `lib` subdirectories that do
     # not contain `.rb` files, or that should not be reloaded or eager loaded.
     # Common ones are `templates`, `generators`, or `middleware`, for example.
-    config.autoload_lib(ignore: %w[assets tasks])
+    config.autoload_lib(ignore: ["assets", "tasks"])
 
     # Configuration for the application, engines, and railties goes here.
     #
     # These settings can be overridden in specific environments using the files
     # in config/environments, which are processed later.
     #
-    # config.time_zone = "Central Time (US & Canada)"
+    config.time_zone = "Mountain Time (US & Canada)"
     # config.eager_load_paths << Rails.root.join("extras")
 
     # Don't generate system test files.
     config.generators.system_tests = nil
+
+    # Mission Control requires signing in through ApplicationController instead of HTTP basic auth.
+    config.mission_control.jobs.base_controller_class = "ApplicationController"
+    config.mission_control.jobs.http_basic_auth_enabled = false
+
+    # The synced copy of the Obsidian vault that reminders are read from.
+    config.x.vault_path = ENV.fetch("VAULT_PATH", Rails.root.join("tmp/vault").to_s)
+    # The vault's name in Obsidian, for links that open a reminder's note.
+    config.x.vault_name = ENV.fetch("VAULT_NAME", "Vault")
   end
 end

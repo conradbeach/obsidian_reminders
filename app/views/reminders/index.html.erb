@@ -1,0 +1,27 @@
+<header class="mb-6 flex items-center justify-between">
+  <h1 class="flex items-center gap-3 text-2xl font-bold">
+    <%= image_tag "/icon.svg", alt: "", class: "size-9 rounded-lg" %>
+    Reminders
+  </h1>
+  <%= button_to "Sign out", session_path, method: :delete, class: "text-sm text-gray-500" %>
+</header>
+
+<%= render "push_notifications" %>
+
+<% if @unscheduled.any? %>
+  <section id="unscheduled-reminders" class="mb-6 rounded-xl bg-amber-50 p-4 shadow-sm">
+    <h2 class="font-semibold text-amber-900">Needs a clearer time</h2>
+    <ul class="divide-y divide-amber-100"><%= render @unscheduled %></ul>
+  </section>
+<% end %>
+
+<section id="upcoming-reminders" class="rounded-xl bg-white p-4 shadow-sm">
+  <h2 class="font-semibold">Upcoming</h2>
+  <% if @upcoming.any? %>
+    <ul class="divide-y divide-gray-100"><%= render @upcoming %></ul>
+  <% else %>
+    <p class="py-3 text-gray-500">
+      Nothing coming up. Add a reminder to any note, like <code>Call the dentist (@tomorrow 9am)</code>.
+    </p>
+  <% end %>
+</section>

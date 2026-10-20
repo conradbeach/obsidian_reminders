@@ -92,7 +92,7 @@ RSpec.describe Reminder do
 
         described_class.notify_due
 
-        message = { title: "Call the dentist", options: { body: "Errands", data: { path: "/" } } }.to_json
+        message = { title: "Call the dentist", options: { data: { path: "/" } } }.to_json
         expect(WebPush).to have_received(:payload_send).once
           .with(hash_including(endpoint: "https://web.push.apple.com/tabitha", message:))
         expect(reminder.reload.notified_at).to eq(now)

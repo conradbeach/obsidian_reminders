@@ -36,10 +36,10 @@ RSpec.describe PushSubscription do
         subscription = create(:push_subscription)
         allow(WebPush).to receive(:payload_send)
 
-        result = subscription.deliver(title: "Expiring", body: "Wheat expires soon", path: "/")
+        result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(true)
-        message = { title: "Expiring", options: { body: "Wheat expires soon", data: { path: "/" } } }.to_json
+        message = { title: "Call the dentist", options: { data: { path: "/" } } }.to_json
         expect(WebPush).to have_received(:payload_send)
           .with(hash_including(endpoint: subscription.endpoint, p256dh: "p256dh-key", auth: "auth-key", message:))
       end
@@ -52,7 +52,7 @@ RSpec.describe PushSubscription do
         allow(WebPush).to receive(:payload_send)
           .and_raise(WebPush::ExpiredSubscription.new(response, "push.example.com"))
 
-        result = subscription.deliver(title: "Expiring", body: "Wheat expires soon", path: "/")
+        result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(false)
         expect(described_class).to_not exist(subscription.id)
@@ -66,7 +66,7 @@ RSpec.describe PushSubscription do
         allow(WebPush).to receive(:payload_send)
           .and_raise(WebPush::PushServiceError.new(response, "push.example.com"))
 
-        result = subscription.deliver(title: "Expiring", body: "Wheat expires soon", path: "/")
+        result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(false)
         expect(described_class).to exist(subscription.id)
@@ -78,7 +78,7 @@ RSpec.describe PushSubscription do
         subscription = create(:push_subscription)
         allow(WebPush).to receive(:payload_send).and_raise(Net::OpenTimeout)
 
-        result = subscription.deliver(title: "Expiring", body: "Wheat expires soon", path: "/")
+        result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(false)
         expect(described_class).to exist(subscription.id)

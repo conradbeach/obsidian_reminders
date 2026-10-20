@@ -16,14 +16,14 @@ class PushSubscription < ApplicationRecord
   ].freeze
 
   # Returns whether any subscription accepted the notification.
-  def self.deliver_to_all(title:, body:, path:)
-    find_each.map { it.deliver(title:, body:, path:) }.any?
+  def self.deliver_to_all(title:, path:)
+    find_each.map { it.deliver(title:, path:) }.any?
   end
 
   # Returns whether the push service accepted the notification.
-  def deliver(title:, body:, path:)
+  def deliver(title:, path:)
     WebPush.payload_send(
-      message: { title:, options: { body:, data: { path: } } }.to_json,
+      message: { title:, options: { data: { path: } } }.to_json,
       endpoint:,
       p256dh: p256dh_key,
       auth: auth_key,

@@ -26,6 +26,22 @@ RSpec.describe "Reminders" do
       expect(response.parsed_body.css("#upcoming-reminders li")).to be_empty
     end
 
+    context "when showing only today" do
+      it "lists only the reminders still to come today" do
+        travel_to Time.zone.parse("2026-10-19 18:00")
+        sign_in create(:user, note_folders: ["Tabitha"])
+        create(:reminder, note_path: "Tabitha/Garden.md", line: "Water the plants (@8pm)",
+          remind_at: Time.zone.parse("2026-10-19 20:00"))
+        create(:reminder, note_path: "Tabitha/Errands.md", line: "Call the dentist (@tomorrow 9am)",
+          remind_at: Time.zone.parse("2026-10-20 09:00"))
+
+        get root_path(show: "today")
+
+        expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)).to eq(["Water the plants"])
+        expect(response.parsed_body.css("#reminder-filter [aria-current=page]").text).to eq("Today")
+      end
+    end
+
     it "lists the user's reminders whose time couldn't be understood" do
       sign_in create(:user, note_folders: ["Tabitha"])
       create(:reminder, note_path: "Tabitha/Garden.md", line: "Water the plants (@whenever)", directive: "whenever",

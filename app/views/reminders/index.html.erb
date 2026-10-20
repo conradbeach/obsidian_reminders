@@ -29,6 +29,13 @@
   </section>
 <% end %>
 
+<nav id="reminder-filter" class="mb-4 grid grid-cols-2 rounded-lg bg-violet-100 p-1 text-center text-sm font-medium">
+  <% [["Today", root_path(show: "today"), @today_only], ["All", root_path, !@today_only]].each do |label, path, current| %>
+    <%= link_to label, path, aria: { current: current && "page" },
+          class: ["rounded-md py-1.5", current ? "bg-white text-violet-800 shadow-sm" : "text-violet-700"] %>
+  <% end %>
+</nav>
+
 <div id="upcoming-reminders" class="space-y-4">
   <% if @upcoming_by_day.any? %>
     <% @upcoming_by_day.each do |date, reminders| %>
@@ -39,7 +46,8 @@
     <% end %>
   <% else %>
     <p class="rounded-xl bg-white p-4 text-gray-500 shadow-sm">
-      Nothing coming up. Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
+      <%= @today_only ? "Nothing else today." : "Nothing coming up." %>
+      Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
     </p>
   <% end %>
 </div>

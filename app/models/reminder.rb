@@ -5,6 +5,7 @@ class Reminder < ApplicationRecord
   LIST_MARKER = /\A(?:[-*+]|\d+\.)\s+(?:\[.\]\s+)?/
 
   scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
+  scope :today, -> { where(remind_at: Time.current.all_day) }
   scope :unscheduled, -> { where(remind_at: nil).order(:note_path, :line) }
   scope :in_folders, lambda { |folders|
     conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }

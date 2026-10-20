@@ -11,10 +11,10 @@ servers:
 ssh:
   user: <%= KAMAL_CREDENTIALS.dig(:deploy, :ssh_user) %>
 
-# Tailscale Serve terminates HTTPS (required for the PWA and push
-# notifications) and forwards to kamal-proxy on localhost. kamal-proxy is
-# shared by every Kamal app on the server, and staying on localhost ports
-# keeps 80/443 free for other services.
+# The tailscale accessory terminates HTTPS (required for the PWA and push
+# notifications) under its own *.ts.net name and forwards to kamal-proxy on
+# localhost, which routes by that name. kamal-proxy is shared by every Kamal
+# app on the server, so these settings must match the other apps'.
 proxy:
   ssl: false
   host: <%= KAMAL_CREDENTIALS.dig(:deploy, :host) %>
@@ -34,23 +34,68 @@ env:
   clear:
     # Runs Solid Queue (and its recurring jobs) inside Puma.
     SOLID_QUEUE_IN_PUMA: true
+    VAULT_PATH: /vault
+    VAULT_NAME: "<%= KAMAL_CREDENTIALS.dig(:obsidian, :vault_name) %>"
 
 aliases:
   console: app exec --interactive --reuse "bin/rails console"
   shell: app exec --interactive --reuse "bash"
   logs: app logs -f
   dbc: app exec --interactive --reuse "bin/rails dbconsole --include-password"
+  # Runs Obsidian Headless commands as the obsidian accessory's user, e.g. `bin/kamal ob login`.
+  ob: accessory exec obsidian --interactive --reuse "sh /etc/obsidian/ob"
 
 volumes:
   - "obsidian_reminders_storage:/rails/storage"
+  - "obsidian_reminders_vault:/vault:ro"
 
 asset_path: /rails/public/assets
 
 builder:
   arch: amd64
 
-<% if KAMAL_CREDENTIALS.litestream %>
 accessories:
+  # Keeps a download-only copy of the Obsidian vault in sync with Obsidian
+  # Sync, for the app to read reminders from. Waits until the vault has been
+  # set up (see README.md).
+  obsidian:
+    image: node:24.19.0-slim
+    host: <%= KAMAL_CREDENTIALS.dig(:deploy, :server) %>
+    cmd: /etc/obsidian/start.sh
+    options:
+      entrypoint: /bin/sh
+    files:
+      - config/obsidian/start.sh:/etc/obsidian/start.sh
+      - config/obsidian/ob:/etc/obsidian/ob
+    volumes:
+      - "obsidian_reminders_vault:/vault"
+      - "obsidian_reminders_obsidian_home:/home/node"
+
+  # A Tailscale node of its own gives the app a separate *.ts.net name and
+  # HTTPS certificate, so it doesn't share an origin (cookies, service worker)
+  # with other apps on the server. Host networking lets it reach kamal-proxy
+  # on localhost.
+  tailscale:
+    image: tailscale/tailscale:v1.102.5
+    host: <%= KAMAL_CREDENTIALS.dig(:deploy, :server) %>
+    network: host
+    env:
+      secret:
+        - TS_AUTHKEY
+      clear:
+        TS_HOSTNAME: <%= KAMAL_CREDENTIALS.dig(:deploy, :host).to_s.split(".").first %>
+        TS_STATE_DIR: /var/lib/tailscale
+        TS_SERVE_CONFIG: /config/serve.json
+        # Userspace networking needs no access to the host's network devices,
+        # and an automatic port avoids the host's own tailscaled.
+        TS_USERSPACE: true
+        TS_TAILSCALED_EXTRA_ARGS: --port=0
+    files:
+      - config/tailscale/serve.json:/config/serve.json
+    volumes:
+      - "obsidian_reminders_tailscale:/var/lib/tailscale"
+
+<% if KAMAL_CREDENTIALS.litestream %>
   # Continuously replicates the production database to Cloudflare R2, keeping
   # daily snapshots for 30 days. On a server without a database, it first
   # restores the latest backup (config/litestream/start.sh).

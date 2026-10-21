@@ -140,6 +140,7 @@ RSpec.describe "Reminders" do
         post reminders_path, params: { reminder_addition: { text: "Call the dentist", time: "whenever" } }
 
         expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body.at_css("#new-reminder")["hidden"]).to be_nil
         expect(response.parsed_body.at_css("#new-reminder").text).to include("When isn't a time the app understands")
         expect(inbox).to_not exist
         expect(Reminder.count).to eq(0)

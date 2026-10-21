@@ -21,25 +21,6 @@
     </section>
   <% end %>
 
-  <% if Current.user.reminders_note %>
-    <%= form_with model: @addition, url: reminders_path, id: "new-reminder",
-          class: "mb-6 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm",
-          data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" } do |form| %>
-      <% if @addition.errors.any? %>
-        <ul class="mb-3 text-sm font-medium text-red-700 dark:text-red-300">
-          <% @addition.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
-        </ul>
-      <% end %>
-      <%= form.label :text, "New reminder", class: "sr-only" %>
-      <%= form.text_field :text, placeholder: "Call the dentist", autocomplete: "off", class: "input" %>
-      <div class="mt-2 flex gap-2">
-        <%= form.label :time, "When", class: "sr-only" %>
-        <%= form.text_field :time, placeholder: "tomorrow 9am", autocomplete: "off", class: "input" %>
-        <%= form.submit "Add", class: "btn-primary" %>
-      </div>
-    <% end %>
-  <% end %>
-
   <% if @overdue.any? %>
     <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 dark:bg-red-950/40 p-4 shadow-sm">
       <h2 class="font-semibold text-red-800 dark:text-red-300">Overdue</h2>
@@ -56,15 +37,48 @@
     </section>
   <% end %>
 
-  <nav id="reminder-filter" class="mb-4 grid grid-cols-2 rounded-lg bg-violet-100 dark:bg-violet-950/60 p-1 text-center text-sm font-medium">
-    <% [["Today", true], ["All", false]].each do |label, today_only| %>
-      <% current = Current.user.show_today_only? == today_only %>
-      <%= button_to label, reminder_filter_path, method: :patch, params: { show_today_only: today_only },
-            aria: { pressed: current },
-            class: ["w-full rounded-md py-1.5 cursor-pointer",
-                    current ? "bg-white text-violet-800 shadow-sm dark:bg-gray-800 dark:text-violet-200" : "text-violet-700 dark:text-violet-300"] %>
+  <div class="mb-4" data-controller="new-reminder">
+    <div class="flex items-center gap-3">
+      <nav id="reminder-filter" class="grid flex-1 grid-cols-2 rounded-lg bg-violet-100 dark:bg-violet-950/60 p-1 text-center text-sm font-medium">
+        <% [["Today", true], ["All", false]].each do |label, today_only| %>
+          <% current = Current.user.show_today_only? == today_only %>
+          <%= button_to label, reminder_filter_path, method: :patch, params: { show_today_only: today_only },
+                aria: { pressed: current },
+                class: ["w-full rounded-md py-1.5 cursor-pointer",
+                        current ? "bg-white text-violet-800 shadow-sm dark:bg-gray-800 dark:text-violet-200" : "text-violet-700 dark:text-violet-300"] %>
+        <% end %>
+      </nav>
+      <% if Current.user.reminders_note %>
+        <button type="button" aria-label="New reminder" aria-controls="new-reminder"
+          aria-expanded="<%= @addition.errors.any? %>" data-new-reminder-target="button" data-action="new-reminder#toggle"
+          data-morph-preserve="aria-expanded"
+          class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-violet-600 text-white shadow-sm hover:bg-violet-500">
+          <svg class="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+            aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
+        </button>
+      <% end %>
+    </div>
+
+    <% if Current.user.reminders_note %>
+      <%= form_with model: @addition, url: reminders_path, id: "new-reminder", html: { hidden: @addition.errors.none? },
+            class: "mt-4 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm",
+            data: { new_reminder_target: "form", morph_preserve: "hidden", action: "turbo:submit-end->new-reminder#submitted" } do |form| %>
+        <% if @addition.errors.any? %>
+          <ul class="mb-3 text-sm font-medium text-red-700 dark:text-red-300">
+            <% @addition.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+          </ul>
+        <% end %>
+        <%= form.label :text, "Reminder", class: "sr-only" %>
+        <%= form.text_field :text, placeholder: "Call the dentist", autocomplete: "off", class: "input",
+              data: { new_reminder_target: "text" } %>
+        <div class="mt-2 flex gap-2">
+          <%= form.label :time, "When", class: "sr-only" %>
+          <%= form.text_field :time, placeholder: "tomorrow 9am", autocomplete: "off", class: "input" %>
+          <%= form.submit "Add", class: "btn-primary" %>
+        </div>
+      <% end %>
     <% end %>
-  </nav>
+  </div>
 
   <div id="upcoming-reminders" class="space-y-4">
     <% if @current_by_day.any? %>

@@ -54,6 +54,40 @@ RSpec.describe "Reminders" do
       end
     end
 
+    context "when nothing is left today" do
+      it "shows that the day is done, without the hint about adding reminders" do
+        sign_in create(:user, note_folders: ["Tabitha"], show_today_only: true)
+
+        get root_path
+
+        expect(response.parsed_body.at_css("#all-done").text).to include("All done for today")
+        expect(response.parsed_body.at_css("#upcoming-reminders").text).to_not include("Add a reminder")
+      end
+    end
+
+    context "when nothing is left today but something is overdue" do
+      it "says nothing else is due today rather than that the day is done" do
+        sign_in create(:user, note_folders: ["Tabitha"], show_today_only: true)
+        create(:reminder, line: "Pay rent (@Oct 1)", remind_at: 3.days.ago)
+
+        get root_path
+
+        expect(response.parsed_body.at_css("#upcoming-reminders").text.strip).to eq("Nothing else today.")
+        expect(response.parsed_body.at_css("#all-done")).to be_nil
+      end
+    end
+
+    context "when the user shows all reminders and has none" do
+      it "shows the hint about adding reminders" do
+        sign_in create(:user, note_folders: ["Tabitha"], show_today_only: false)
+
+        get root_path
+
+        expect(response.parsed_body.at_css("#upcoming-reminders").text).to include("Add a reminder to any")
+        expect(response.parsed_body.at_css("#all-done")).to be_nil
+      end
+    end
+
     it "lists reminders more than the user's overdue hours past as overdue, oldest first, with their dates" do
       travel_to Time.zone.parse("2026-10-19 18:00")
       sign_in create(:user, note_folders: ["Tabitha"], overdue_after_hours: 6)

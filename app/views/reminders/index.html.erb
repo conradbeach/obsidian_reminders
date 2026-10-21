@@ -89,10 +89,18 @@
         </section>
       <% end %>
     <% else %>
-      <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
-        <%= Current.user.show_today_only? ? "Nothing else today." : "Nothing coming up." %>
-        Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
-      </p>
+      <% if !Current.user.show_today_only? %>
+        <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
+          Nothing coming up. Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
+        </p>
+      <% elsif @overdue.any? %>
+        <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">Nothing else today.</p>
+      <% else %>
+        <section id="all-done" class="rounded-xl bg-white dark:bg-gray-900 px-4 py-8 text-center shadow-sm">
+          <%= image_tag "all-done.svg", alt: "", class: "mx-auto w-40" %>
+          <p class="mt-3 font-medium text-violet-800 dark:text-violet-200">All done for today</p>
+        </section>
+      <% end %>
     <% end %>
   </div>
 </div>

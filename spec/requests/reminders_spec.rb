@@ -59,14 +59,14 @@ RSpec.describe "Reminders" do
       sign_in create(:user, note_folders: ["Tabitha"], overdue_after_hours: 6)
       create(:reminder, line: "Call the dentist (@9am)", remind_at: Time.zone.parse("2026-10-19 09:00"))
       create(:reminder, line: "Return library books (@Jan 5)", remind_at: Time.zone.parse("2026-01-05 08:00"))
-      create(:reminder, line: "Get the dry cleaning (@1pm)", remind_at: Time.zone.parse("2026-10-19 13:00"))
+      create(:reminder, line: "Get dry cleaning (@1pm)", remind_at: Time.zone.parse("2026-10-19 13:00"))
 
       get root_path
 
       overdue = response.parsed_body.css("#overdue-reminders li")
       expect(overdue.map { it.at_css("p.font-medium").text }).to eq(["Return library books", "Call the dentist"])
       expect(overdue.first.text).to include("Mon, Jan 5 at 8:00 AM")
-      expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)).to eq(["Get the dry cleaning"])
+      expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)).to eq(["Get dry cleaning"])
     end
 
     it "lists the user's reminders whose time couldn't be understood" do

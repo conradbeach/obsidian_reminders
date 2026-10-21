@@ -25,13 +25,22 @@ Water the plants (@friday 6pm)
   morning; a weekday whose time has already passed today means next week.
   Anything else (`next week`, a bare `9`) isn't guessed at: it shows up under
   **Needs a clearer time**.
-- Repeating reminders start with `every`: `(@every 3 days)`, `(@every day at
-  8am)`, `(@every other week)`, `(@every weekday at 7:30am)`, `(@every monday and
-  thursday at 7pm)`. A repeating reminder notifies once per occurrence and stays
-  (Overdue once its time passes) until it's marked done in the app, which moves
-  it to its next occurrence: for weekdays, the next scheduled day after it was
-  done; for every-N-days, N days after the day it was done. Checking its line off
-  in Obsidian, or removing it, ends it for good.
+- Repeating reminders start with `every`:
+  - intervals: `(@every 3 days)`, `(@every day at 8am)`, `(@every other week)`,
+    `(@every 6 months)`, `(@every 2 years)`
+  - weekdays: `(@every weekday at 7:30am)`, `(@every monday and thursday at 7pm)`,
+    `(@every 2 weeks on tuesday at 7:50am)`
+  - dates: `(@every year on october 1)`, `(@every april 19)`,
+    `(@every month on the 15th)`, `(@every 2nd tue)`,
+    `(@every last saturday in october)`, `(@every 3rd sat of sep)`
+
+  Adding `from <date>` (`(@every 6 months from 2027-03-01)`) makes that date the
+  first occurrence; otherwise it's the next one that hasn't passed. A repeating
+  reminder notifies once per occurrence and stays (Overdue once its time passes)
+  until it's marked done in the app, which moves it to its next occurrence:
+  intervals count from the day it was done; everything else moves to its next
+  scheduled date. Checking its line off in Obsidian, or removing it, ends it for
+  good.
 - Relative times are measured from when the app first sees the reminder, about
   a minute after the note syncs. Once seen, a reminder keeps its time even if the
   words would mean something else later ("tomorrow" stays that tomorrow).

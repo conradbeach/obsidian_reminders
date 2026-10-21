@@ -34,5 +34,36 @@ RSpec.describe Reminder::Recurrence do
           .to eq(Time.zone.parse("2026-11-02 18:00"))
       end
     end
+
+    context "when it repeats every so many months" do
+      it "counts from the day it was done" do
+        filter = recurrence("every 6 months")
+
+        expect(filter.next_time(occurrence: Time.zone.parse("2026-10-01 09:00"),
+          done_at: Time.zone.parse("2026-10-19 20:00")))
+          .to eq(Time.zone.parse("2027-04-19 09:00"))
+      end
+    end
+
+    context "when it repeats every few weeks on a weekday" do
+      it "keeps to the schedule however late it was done" do
+        trash = recurrence("every 2 weeks on tuesday at 7:50am")
+        tuesday = Time.zone.parse("2026-10-13 07:50")
+
+        expect(trash.next_time(occurrence: tuesday,
+          done_at: tuesday + 1.hour)).to eq(Time.zone.parse("2026-10-27 07:50"))
+        expect(trash.next_time(occurrence: tuesday,
+          done_at: tuesday + 16.days)).to eq(Time.zone.parse("2026-11-10 07:50"))
+      end
+    end
+
+    context "when it's fixed to the calendar" do
+      it "returns the next scheduled date" do
+        halloween_party = recurrence("every year on the last saturday in october")
+
+        expect(halloween_party.next_time(occurrence: Time.zone.parse("2026-10-31 09:00"),
+          done_at: Time.zone.parse("2026-10-31 20:00"))).to eq(Time.zone.parse("2027-10-30 09:00"))
+      end
+    end
   end
 end

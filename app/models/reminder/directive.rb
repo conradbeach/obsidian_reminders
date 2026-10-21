@@ -40,12 +40,17 @@ class Reminder::Directive
     date_and_clock_time
   end
 
-  # How the reminder repeats ("every monday and thursday at 7pm"), or nil if it doesn't or isn't understood.
+  # How the reminder repeats ("every monday and thursday at 7pm", "every 6 months from 2027-03-01"), or nil if it
+  # doesn't or isn't understood.
   def recurrence
     return unless recurring?
 
-    rule, clock = Reminder::Clock.split(@text)
-    Reminder::Recurrence.parse(rule, clock || [DATE_ONLY_HOUR, 0])
+    rule, anchor_text = @text.split(/\s+(?:from|starting)\s+/, 2)
+    anchor = anchor_text && self.class.new(anchor_text, now: @now).time&.to_date
+    return if anchor_text && !anchor
+
+    rule, clock = Reminder::Clock.split(rule)
+    Reminder::Recurrence.parse(rule, clock || [DATE_ONLY_HOUR, 0], anchor:)
   end
 
   private

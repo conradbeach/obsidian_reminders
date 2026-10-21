@@ -85,9 +85,28 @@ RSpec.describe Reminder::Directive do
       end
     end
 
+    context "when a repeating directive is fixed to the calendar" do
+      it "returns its first scheduled date" do
+        expect(time_for("every year on october 1")).to eq(Time.zone.parse("2027-10-01 09:00"))
+        expect(time_for("every last saturday in october")).to eq(Time.zone.parse("2026-10-31 09:00"))
+        expect(time_for("every 3rd Sat of Sep")).to eq(Time.zone.parse("2027-09-18 09:00"))
+        expect(time_for("every 2nd tue at 7pm")).to eq(Time.zone.parse("2026-11-10 19:00"))
+        expect(time_for("every month on the 15th")).to eq(Time.zone.parse("2026-11-15 09:00"))
+      end
+    end
+
+    context "when a repeating directive has a starting date" do
+      it "returns that date, even if it's past or off the schedule" do
+        expect(time_for("every 2nd sun from 2026-10-25")).to eq(Time.zone.parse("2026-10-25 09:00"))
+        expect(time_for("every 6 months from 2027-03-01")).to eq(Time.zone.parse("2027-03-01 09:00"))
+        expect(time_for("every 2 weeks on tue at 7:50am from 2026-10-13"))
+          .to eq(Time.zone.parse("2026-10-13 07:50"))
+      end
+    end
+
     context "when a repeating directive isn't recognized" do
       it "returns nil" do
-        expect(time_for("every month")).to be_nil
+        expect(time_for("every blue moon")).to be_nil
         expect(time_for("every 0 days")).to be_nil
         expect(time_for("every monday and sometimes")).to be_nil
       end

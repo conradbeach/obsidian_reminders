@@ -1,4 +1,6 @@
 class RemindersController < ApplicationController
+  allow_token_authentication only: [:index, :create]
+
   def index
     respond_to do |format|
       format.html do

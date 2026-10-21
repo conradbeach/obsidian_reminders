@@ -25,6 +25,13 @@ Water the plants (@friday 6pm)
   morning; a weekday whose time has already passed today means next week.
   Anything else (`next week`, a bare `9`) isn't guessed at: it shows up under
   **Needs a clearer time**.
+- Repeating reminders start with `every`: `(@every 3 days)`, `(@every day at
+  8am)`, `(@every other week)`, `(@every weekday at 7:30am)`, `(@every monday and
+  thursday at 7pm)`. A repeating reminder notifies once per occurrence and stays
+  (Overdue once its time passes) until it's marked done in the app, which moves
+  it to its next occurrence: for weekdays, the next scheduled day after it was
+  done; for every-N-days, N days after the day it was done. Checking its line off
+  in Obsidian, or removing it, ends it for good.
 - Relative times are measured from when the app first sees the reminder, about
   a minute after the note syncs. Once seen, a reminder keeps its time even if the
   words would mean something else later ("tomorrow" stays that tomorrow).
@@ -43,7 +50,7 @@ Water the plants (@friday 6pm)
   are unaffected unless the date has passed.
 - Reminders whose time has passed stay under **Overdue**, however old, until
   they're checked off or removed from the note.
-- Tapping the circle beside a reminder marks it done: it disappears from the
+- Tapping the circle beside a one-time reminder marks it done: it disappears from the
   app at once, and the app checks it off in the note (`- [x]`, adding a
   checkbox if the line had none), which reaches her other devices within about
   a minute. Obsidian Sync's version history can undo it.

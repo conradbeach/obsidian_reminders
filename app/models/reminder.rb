@@ -52,10 +52,19 @@ class Reminder < ApplicationRecord
     due.find_each(&:notify)
   end
 
-  # Hides the reminder at once; checking it off in its note happens in the background, since it waits on the sync.
+  # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder is hidden at
+  # once and checked off in its note in the background, since that waits on the sync.
   def complete
-    update!(completed_at: Time.current)
-    CheckOffReminderJob.perform_later(self)
+    if recurrence
+      update!(remind_at: recurrence.next_time(occurrence: remind_at, done_at: Time.current), notified_at: nil)
+    else
+      update!(completed_at: Time.current)
+      CheckOffReminderJob.perform_later(self)
+    end
+  end
+
+  def recurrence
+    @recurrence ||= Directive.new(directive).recurrence
   end
 
   def check_off_in_vault

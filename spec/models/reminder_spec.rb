@@ -144,6 +144,19 @@ RSpec.describe Reminder do
       expect(user.reminders).to be_empty
     end
 
+    context "when the reminder repeats" do
+      it "moves it to its next occurrence, to be notified about again, without checking it off" do
+        reminder = create(:reminder, directive: "every monday and thursday at 7pm",
+          line: "Run (@every monday and thursday at 7pm)",
+          remind_at: Time.zone.parse("2026-10-19 19:00"), notified_at: Time.zone.parse("2026-10-19 19:00"))
+
+        expect { reminder.complete }.to_not have_enqueued_job(CheckOffReminderJob)
+        expect(reminder.reload).to have_attributes(
+          remind_at: Time.zone.parse("2026-10-22 19:00"), notified_at: nil, completed_at: nil,
+        )
+      end
+    end
+
     it "is never notified about" do
       create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
       allow(WebPush).to receive(:payload_send)

@@ -10,9 +10,6 @@ class Reminder::Directive
     .each.with_index(1).to_h.merge("a" => 1, "an" => 1)
 
   COUNT = /(?<count>\d+|[a-z]+)/
-  CLOCK = /(?:at\s+)?(?<clock>noon|\d{1,2}(?::\d{2})?\s*[ap]m|\d{1,2}:\d{2})/
-  CLOCK_AT_END = /(?:\A|\s+)#{CLOCK}\z/
-  CLOCK_AT_START = /\A#{CLOCK}(?:\s+|\z)/
   DURATION = /\Ain\s+#{COUNT}\s+(?<unit>minute|min|hour|hr)s?\z/
   DATE_OFFSET = /\Ain\s+#{COUNT}\s+(?<unit>day|week|month)s?\z/
   WEEKDAY = /\A(?:(?<modifier>this|next)\s+)?(?<name>[a-z]{3,})\z/
@@ -23,6 +20,10 @@ class Reminder::Directive
     /\A(?<day>\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(?<month>[a-z]{3,})\.?(?:\s+(?<year>\d{4}))?\z/,
   ].freeze
 
+  def self.count(text)
+    Integer(text, 10, exception: false) || COUNTS[text]
+  end
+
   def initialize(text, now: Time.current)
     @text = text.downcase.gsub(/\b([ap])\.m\.?/, '\1m').tr(",", " ").squish
     @now = now
@@ -30,11 +31,27 @@ class Reminder::Directive
 
   # Times found for the first time are relative to now. A time of day without a date is the next one, so "9am" in
   # the evening is tomorrow morning; a weekday ("friday 5pm") likewise moves to next week once its time has passed.
+  # A repeating reminder's time is its first occurrence.
   def time
     return if @text.empty?
+    return recurrence&.first_time(@now) if recurring?
     return duration_from_now if DURATION.match?(@text)
 
-    date_text, clock = split_clock
+    date_and_clock_time
+  end
+
+  # How the reminder repeats ("every monday and thursday at 7pm"), or nil if it doesn't or isn't understood.
+  def recurrence
+    return unless recurring?
+
+    rule, clock = Reminder::Clock.split(@text)
+    Reminder::Recurrence.parse(rule, clock || [DATE_ONLY_HOUR, 0])
+  end
+
+  private
+
+  def date_and_clock_time
+    date_text, clock = Reminder::Clock.split(@text)
     date, roll = date_and_roll(date_text.delete_prefix("on ").strip)
     return unless date
 
@@ -43,37 +60,18 @@ class Reminder::Directive
     roll && time <= @now ? at(date.advance(roll), clock) : time
   end
 
-  private
+  def recurring?
+    @text.start_with?("every ")
+  end
 
-  def at(date, (hour, minute))
-    Time.zone.local(date.year, date.month, date.day, hour, minute)
+  def at(date, clock)
+    Reminder::Clock.at(date, clock)
   end
 
   def duration_from_now
     match = DURATION.match(@text)
     count = count(match[:count]) or return
     @now.change(sec: 0) + (match[:unit].start_with?("h") ? count.hours : count.minutes)
-  end
-
-  # Splits a valid time of day off either end of the text.
-  def split_clock
-    match = CLOCK_AT_END.match(@text) || CLOCK_AT_START.match(@text)
-    clock = match && parse_clock(match[:clock])
-    clock ? [match.pre_match + match.post_match, clock] : [@text, nil]
-  end
-
-  def parse_clock(text)
-    return [12, 0] if text == "noon"
-
-    hour, minute, meridiem = text.match(/(\d+)(?::(\d+))?\s*([ap]m)?/).captures
-    hour = twenty_four_hour(hour.to_i, meridiem) or return
-    [hour, minute.to_i] if hour < 24 && minute.to_i < 60
-  end
-
-  def twenty_four_hour(hour, meridiem)
-    return hour unless meridiem
-
-    (hour % 12) + (meridiem == "pm" ? 12 : 0) if hour.between?(1, 12)
   end
 
   # The date, and how far to move it if its time has already passed today.
@@ -127,6 +125,6 @@ class Reminder::Directive
   end
 
   def count(text)
-    Integer(text, 10, exception: false) || COUNTS[text]
+    self.class.count(text)
   end
 end

@@ -76,6 +76,23 @@ RSpec.describe Reminder::Directive do
       end
     end
 
+    context "when the directive repeats" do
+      it "returns the first occurrence that hasn't passed" do
+        expect(time_for("every 3 days")).to eq(Time.zone.parse("2026-10-20 09:00"))
+        expect(time_for("every monday and thursday at 7pm")).to eq(Time.zone.parse("2026-10-19 19:00"))
+        expect(time_for("every mon & thu at 5pm")).to eq(Time.zone.parse("2026-10-22 17:00"))
+        expect(time_for("every weekday at 8:30am")).to eq(Time.zone.parse("2026-10-20 08:30"))
+      end
+    end
+
+    context "when a repeating directive isn't recognized" do
+      it "returns nil" do
+        expect(time_for("every month")).to be_nil
+        expect(time_for("every 0 days")).to be_nil
+        expect(time_for("every monday and sometimes")).to be_nil
+      end
+    end
+
     context "when the directive isn't a recognized date or time" do
       it "returns nil rather than guessing" do
         expect(time_for("whenever")).to be_nil

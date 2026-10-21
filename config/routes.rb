@@ -4,8 +4,7 @@ Rails.application.routes.draw do
   resources :reminders, only: [] do
     resource :completion, only: :create, module: :reminders
   end
-  resource :settings, only: :show
-  resource :note_folders, only: :update
+  resource :settings, only: [:show, :update]
   resource :reminder_filter, only: :update
   mount MissionControl::Jobs::Engine, at: "/jobs"
 

@@ -36,7 +36,7 @@ Water the plants (@friday 6pm)
 
   Adding `from <date>` (`(@every 6 months from 2027-03-01)`) makes that date the
   first occurrence; otherwise it's the next one that hasn't passed. A repeating
-  reminder notifies once per occurrence and stays (Overdue once its time passes)
+  reminder notifies once per occurrence and stays (eventually Overdue)
   until it's marked done in the app, which moves it to its next occurrence:
   intervals count from the day it was done; everything else moves to its next
   scheduled date. Checking its line off in Obsidian, or removing it, ends it for
@@ -57,8 +57,10 @@ Water the plants (@friday 6pm)
   updated along with the edit: fixing a typo tomorrow in a `(@tomorrow)`
   reminder means changing it to `(@today)` too. Absolute dates (`Oct 21 3pm`)
   are unaffected unless the date has passed.
-- Reminders whose time has passed stay under **Overdue**, however old, until
-  they're checked off or removed from the note.
+- A reminder whose time has passed stays listed on its day (dimmed, under
+  **Yesterday** if need be) until it's been past for each user's overdue hours
+  (24 by default, set in **Settings**). Then it moves to **Overdue**, where it
+  stays, however old, until it's checked off or removed from the note.
 - Tapping the circle beside a one-time reminder marks it done: it disappears from the
   app at once, and the app checks it off in the note (`- [x]`, adding a
   checkbox if the line had none), which reaches her other devices within about

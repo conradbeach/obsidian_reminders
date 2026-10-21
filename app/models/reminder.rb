@@ -11,10 +11,9 @@ class Reminder < ApplicationRecord
 
   scope :in_vault, -> { where(missing_since: nil) }
   scope :incomplete, -> { where(completed_at: nil) }
-  scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
-  # Past reminders still in the vault, which are open until they're checked off or deleted.
-  scope :overdue, -> { where(remind_at: ...Time.current).order(:remind_at) }
-  scope :today, -> { where(remind_at: Time.current.all_day) }
+  scope :scheduled_since, ->(time) { where(remind_at: time..).order(:remind_at) }
+  scope :scheduled_before, ->(time) { where(remind_at: ...time).order(:remind_at) }
+  scope :through_today, -> { where(remind_at: ..Time.current.end_of_day) }
   scope :unscheduled, -> { where(remind_at: nil).order(:note_path, :line) }
   scope :in_folders, lambda { |folders|
     conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }

@@ -1,7 +1,7 @@
 <%# locals: (id:, alert: false) %>
 <%# As an alert, only problems show: nothing appears while this device gets notifications. %>
 <% if (vapid_public_key = Rails.application.credentials.dig(:vapid, :public_key)) %>
-  <% state_class = alert ? "mb-6 rounded-xl bg-amber-50 p-4 text-amber-900 shadow-sm" : "" %>
+  <% state_class = alert ? "mb-6 rounded-xl bg-amber-50 dark:bg-amber-950/40 p-4 text-amber-900 dark:text-amber-200 shadow-sm" : "" %>
   <%# Permanent as an alert, so the list refreshing doesn't undo the state the Stimulus controller shows. %>
   <section id="<%= id %>" <%= "data-turbo-permanent" if alert %>
     data-controller="push-notifications"

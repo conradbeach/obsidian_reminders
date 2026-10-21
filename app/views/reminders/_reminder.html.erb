@@ -1,10 +1,10 @@
 <li class="flex items-start gap-3 py-3">
   <%= button_to reminder_completion_path(reminder), form_class: "shrink-0", aria: { label: "Mark “#{reminder.text}” done" },
-        class: "mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 hover:border-violet-600 hover:bg-violet-50" do %>
+        class: "mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 dark:border-violet-500 hover:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950" do %>
   <% end %>
   <div class="min-w-0">
     <p class="font-medium"><%= reminder.text %></p>
-    <p class="text-sm text-gray-500">
+    <p class="text-sm text-gray-500 dark:text-gray-400">
       <% if reminder.recurrence %>
         <svg class="inline size-3.5 -mt-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
           stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Repeats">
@@ -16,7 +16,7 @@
       <% else %>
         Couldn't understand “<%= reminder.directive %>” ·
       <% end %>
-      in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700" do %>
+      in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700 dark:text-violet-300" do %>
         <%= reminder.note_name %>
         <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
           stroke-linejoin="round" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg>

@@ -128,4 +128,4 @@ Rails/I18nLocaleTexts:
 
 # Methods like PushSubscription#deliver perform an action and report success.
 Naming/PredicateMethod:
-  AllowedMethods: [call, deliver, deliver_to_all]
+  AllowedMethods: [call, deliver, deliver_to_all, check_off, check_off_in_vault]

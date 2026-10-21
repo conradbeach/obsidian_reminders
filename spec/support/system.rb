@@ -1,3 +1,6 @@
+# Find buttons and links by their aria-label, like the icon-only Done button.
+Capybara.enable_aria_label = true
+
 RSpec.configure do |config|
   config.before(type: :system) do
     driven_by :playwright, options: {

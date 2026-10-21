@@ -1,7 +1,13 @@
 # The synced copy of the Obsidian vault on disk.
 class Vault
   DIRECTIVE = /\(@([^)]+)\)/
-  COMPLETED_TASK = /\A\s*[-*+]\s+\[[xX]\]/
+  COMPLETED_TASK = /\A\s*(?:[-*+]|\d+[.)])\s+\[[xX]\]/
+  # Shared with the obsidian accessory's sync loop (config/obsidian/start.sh), so the app never edits a note while
+  # Obsidian Headless is syncing it. Dot-files aren't synced.
+  LOCK_FILE = ".reminders.lock".freeze
+  LOCK_TIMEOUT = 10.seconds
+
+  class Busy < StandardError; end
   # Obsidian Sync's copy of a note it couldn't merge, which would repeat the note's reminders.
   CONFLICTED_COPY = /\(conflicted copy/i
   CODE_FENCE = /\A(```|~~~)/
@@ -19,7 +25,25 @@ class Vault
     notes.flat_map { |note| reminders_in(note) }.uniq
   end
 
+  # Checks off the reminder's line in its note. Returns whether the note had exactly one such line to check off.
+  def check_off(note_path:, line:)
+    synchronize { Note.new(@path.join(note_path)).check_off(line) }
+  end
+
   private
+
+  # Raises Busy if the sync loop holds the lock for longer than the timeout.
+  def synchronize
+    @path.join(LOCK_FILE).open(File::RDWR | File::CREAT) do |lock|
+      deadline = LOCK_TIMEOUT.from_now
+      until lock.flock(File::LOCK_EX | File::LOCK_NB)
+        raise Busy if Time.current > deadline
+
+        sleep 0.1
+      end
+      yield
+    end
+  end
 
   def notes
     @path.glob("**/*.md").reject { it.basename.to_s.match?(CONFLICTED_COPY) }

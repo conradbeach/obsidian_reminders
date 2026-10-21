@@ -1,2 +1,3 @@
 # Runs Obsidian Headless as the node user, for the `bin/kamal ob` alias.
-exec setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/home/node /home/node/.npm-global/bin/ob "$@"
+exec setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/home/node XDG_CONFIG_HOME=/vault/.ob-state \
+  /home/node/.npm-global/bin/ob "$@"

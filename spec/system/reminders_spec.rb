@@ -26,4 +26,15 @@ RSpec.describe "Reminders" do
 
     expect(page).to have_content("Pick up dry cleaning")
   end
+
+  it "hides a reminder as soon as it's marked done" do
+    user = create(:user, note_folders: ["Tabitha"])
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
+    visit root_path
+    sign_in_as(user)
+
+    click_on "Mark “Pick up dry cleaning” done"
+
+    expect(page).to have_content("Nothing coming up")
+  end
 end

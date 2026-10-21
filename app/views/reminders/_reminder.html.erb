@@ -1,15 +1,20 @@
-<li class="py-3">
-  <p class="font-medium"><%= reminder.text %></p>
-  <p class="text-sm text-gray-500">
-    <% if reminder.remind_at %>
-      <%= reminder.remind_at.strftime(local_assigns[:with_date] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
-    <% else %>
-      Couldn't understand “<%= reminder.directive %>” ·
-    <% end %>
-    in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700" do %>
-      <%= reminder.note_name %>
-      <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-        stroke-linejoin="round" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg>
-    <% end %>
-  </p>
+<li class="flex items-start gap-3 py-3">
+  <%= button_to reminder_completion_path(reminder), form_class: "shrink-0", aria: { label: "Mark “#{reminder.text}” done" },
+        class: "mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 hover:border-violet-600 hover:bg-violet-50" do %>
+  <% end %>
+  <div class="min-w-0">
+    <p class="font-medium"><%= reminder.text %></p>
+    <p class="text-sm text-gray-500">
+      <% if reminder.remind_at %>
+        <%= reminder.remind_at.strftime(local_assigns[:with_date] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
+      <% else %>
+        Couldn't understand “<%= reminder.directive %>” ·
+      <% end %>
+      in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700" do %>
+        <%= reminder.note_name %>
+        <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg>
+      <% end %>
+    </p>
+  </div>
 </li>

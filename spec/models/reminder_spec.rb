@@ -135,6 +135,26 @@ RSpec.describe Reminder do
     end
   end
 
+  describe "#complete" do
+    it "hides the reminder at once and checks it off in its note in the background" do
+      user = create(:user, note_folders: ["Tabitha"])
+      reminder = create(:reminder, note_path: "Tabitha/Errands.md")
+
+      expect { reminder.complete }.to have_enqueued_job(CheckOffReminderJob).with(reminder)
+      expect(user.reminders).to be_empty
+    end
+
+    it "is never notified about" do
+      create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
+      allow(WebPush).to receive(:payload_send)
+      create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.ago, completed_at: 2.minutes.ago)
+
+      described_class.notify_due
+
+      expect(WebPush).to_not have_received(:payload_send)
+    end
+  end
+
   describe "#text" do
     context "when the line is a task with a directive" do
       it "returns the task without its checkbox or directive" do

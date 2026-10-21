@@ -43,14 +43,24 @@ Water the plants (@friday 6pm)
   are unaffected unless the date has passed.
 - Reminders whose time has passed stay under **Overdue**, however old, until
   they're checked off or removed from the note.
+- Tapping the circle beside a reminder marks it done: it disappears from the
+  app at once, and the app checks it off in the note (`- [x]`, adding a
+  checkbox if the line had none), which reaches her other devices within about
+  a minute. Obsidian Sync's version history can undo it.
 
 ## How it works
 
 - **Obsidian Headless** ([`ob`](https://obsidian.md/help/sync/headless)) runs as
-  a Kamal accessory and keeps a download-only copy of the vault in sync with
-  Obsidian Sync, running a one-shot `ob sync` every 30 seconds (its continuous
-  mode silently stopped receiving changes). The app mounts that copy read-only,
-  so it can never change her notes.
+  a Kamal accessory and keeps a copy of the vault in two-way sync with Obsidian
+  Sync, running a one-shot `ob sync` every 30 seconds (its continuous mode
+  silently stopped receiving changes). Its sync state lives in the vault volume
+  (`/vault/.ob-state`), so the two can't be lost separately: state outliving a
+  wiped vault would look like every note being deleted.
+- The only change the app makes to notes is checking off a reminder's line
+  (`CheckOffReminderJob`, `Vault#check_off`). It edits only a line that appears
+  exactly once, unchanged since the last scan; replaces the note in one step;
+  and holds a lock (`/vault/.reminders.lock`) that each sync also holds, so it
+  never edits a note mid-sync. If the lock is busy it retries.
 - `CheckRemindersJob` runs every minute (Solid Queue recurring task). It scans
   every Markdown file in the vault for directives (`Vault`), stores new ones as
   `Reminder`s and deletes ones that are gone (`Reminder.sync`), then sends push
@@ -171,11 +181,10 @@ is only reachable over Tailscale:
    bin/kamal ob login
    bin/kamal ob sync-list-remote
    bin/kamal ob 'sync-setup --vault "My Vault" --path /vault --device-name "Reminders server"'
-   bin/kamal ob 'sync-config --path /vault --mode pull-only'
    bin/kamal accessory logs obsidian   # should show the first sync within a minute
    ```
-   `pull-only` makes the server download changes without ever uploading any.
-   Obsidian's settings aren't synced by default. Attachments (images, audio,
+   Sync is two-way, the default, so reminders checked off in the app reach her
+   notes. Obsidian's settings aren't synced by default. Attachments (images, audio,
    PDFs, video) are, and Obsidian Headless has no way to turn them all off: an
    empty `--file-types` resets it to that default. Quote everything after `ob`
    so Kamal passes the options through.

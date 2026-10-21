@@ -7,9 +7,10 @@ class Reminder < ApplicationRecord
   MISSING_GRACE_PERIOD = 5.minutes
   # A reminder is the same reminder as long as its note, line, and directive are unchanged.
   IDENTITY = [:note_path, :line, :directive].freeze
-  LIST_MARKER = /\A(?:[-*+]|\d+\.)\s+(?:\[.\]\s+)?/
+  LIST_MARKER = /\A(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?/
 
   scope :in_vault, -> { where(missing_since: nil) }
+  scope :incomplete, -> { where(completed_at: nil) }
   scope :upcoming, -> { where(remind_at: Time.current..).order(:remind_at) }
   # Past reminders still in the vault, which are open until they're checked off or deleted.
   scope :overdue, -> { where(remind_at: ...Time.current).order(:remind_at) }
@@ -19,7 +20,7 @@ class Reminder < ApplicationRecord
     conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }
     conditions.any? ? where(conditions.reduce(:or)) : none
   }
-  scope :due, -> { in_vault.where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
+  scope :due, -> { in_vault.incomplete.where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
 
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
   # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted once they've been missing
@@ -49,6 +50,16 @@ class Reminder < ApplicationRecord
 
   def self.notify_due
     due.find_each(&:notify)
+  end
+
+  # Hides the reminder at once; checking it off in its note happens in the background, since it waits on the sync.
+  def complete
+    update!(completed_at: Time.current)
+    CheckOffReminderJob.perform_later(self)
+  end
+
+  def check_off_in_vault
+    Vault.new(Rails.configuration.x.vault_path).check_off(note_path:, line:)
   end
 
   # Stays unsent, to be retried, when none of the recipients' devices accept the notification.

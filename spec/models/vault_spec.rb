@@ -93,4 +93,67 @@ RSpec.describe Vault do
       end
     end
   end
+
+  describe "#check_off" do
+    def check_off(line)
+      described_class.new(vault_path).check_off(note_path: "Errands.md", line:)
+    end
+
+    context "when the line is an unchecked task" do
+      it "checks it, leaving the rest of the note alone" do
+        write_note("Errands.md", "# Errands\n- [ ] Call the dentist (@friday)\n- [ ] Return books (@monday)\n")
+
+        expect(check_off("- [ ] Call the dentist (@friday)")).to be(true)
+        expect(vault_path.join("Errands.md").read)
+          .to eq("# Errands\n- [x] Call the dentist (@friday)\n- [ ] Return books (@monday)\n")
+      end
+    end
+
+    context "when the line has no checkbox" do
+      it "adds a checked one, keeping list markers, indentation, and line endings" do
+        write_note("Errands.md",
+          "- Call the dentist (@friday)\r\n  2. Return books (@monday)\r\nWater plants (@sunday)")
+
+        check_off("- Call the dentist (@friday)")
+        check_off("2. Return books (@monday)")
+        check_off("Water plants (@sunday)")
+
+        expect(vault_path.join("Errands.md").read)
+          .to eq("- [x] Call the dentist (@friday)\r\n  2. [x] Return books (@monday)\r\n- [x] Water plants (@sunday)")
+      end
+    end
+
+    context "when the checked-off line is scanned" do
+      it "is a completed task with no reminder" do
+        write_note("Errands.md", "  1. Return books (@monday)\n")
+
+        check_off("1. Return books (@monday)")
+
+        expect(described_class.new(vault_path).reminders).to be_empty
+      end
+    end
+
+    context "when the note doesn't have the line exactly once" do
+      it "changes nothing and returns false" do
+        write_note("Errands.md", "Call the dentist (@friday)\nCall the dentist (@friday)\n")
+
+        expect(check_off("Call the dentist (@friday)")).to be(false)
+        expect(check_off("Return books (@monday)")).to be(false)
+        expect(vault_path.join("Errands.md").read).to eq("Call the dentist (@friday)\nCall the dentist (@friday)\n")
+      end
+    end
+
+    context "when the sync loop holds the vault's lock" do
+      it "gives up with Busy, leaving the note alone" do
+        stub_const("Vault::LOCK_TIMEOUT", 0.2.seconds)
+        write_note("Errands.md", "Call the dentist (@friday)\n")
+
+        vault_path.join(".reminders.lock").open(File::RDWR | File::CREAT) do |lock|
+          lock.flock(File::LOCK_EX)
+          expect { check_off("Call the dentist (@friday)") }.to raise_error(Vault::Busy)
+        end
+        expect(vault_path.join("Errands.md").read).to eq("Call the dentist (@friday)\n")
+      end
+    end
+  end
 end

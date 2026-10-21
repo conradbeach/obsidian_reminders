@@ -47,7 +47,8 @@ aliases:
 
 volumes:
   - "obsidian_reminders_storage:/rails/storage"
-  - "obsidian_reminders_vault:/vault:ro"
+  # Writable so checking off a reminder in the app can check it off in its note.
+  - "obsidian_reminders_vault:/vault"
 
 asset_path: /rails/public/assets
 
@@ -55,9 +56,9 @@ builder:
   arch: amd64
 
 accessories:
-  # Keeps a download-only copy of the Obsidian vault in sync with Obsidian
-  # Sync, for the app to read reminders from. Waits until the vault has been
-  # set up (see README.md).
+  # Keeps a copy of the Obsidian vault in two-way sync with Obsidian Sync: the
+  # app reads reminders from it and checks them off in it. Waits until the vault
+  # has been set up (see README.md).
   obsidian:
     image: node:24.19.0-slim
     host: <%= KAMAL_CREDENTIALS.dig(:deploy, :server) %>

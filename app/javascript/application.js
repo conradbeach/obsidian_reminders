@@ -2,7 +2,10 @@
 import "@hotwired/turbo-rails"
 import "controllers"
 
-// Keeps a reminder's notes open while the page's auto-refresh morphs it.
+// Keeps what the page's auto-refresh would otherwise undo as it morphs: notes someone opened, and what they've typed.
 addEventListener("turbo:before-morph-attribute", (event) => {
-  if (event.target instanceof HTMLDetailsElement && event.detail.attributeName === "open") event.preventDefault()
+  const { target, detail: { attributeName } } = event
+  const opened = target instanceof HTMLDetailsElement && attributeName === "open"
+  const typed = target instanceof HTMLInputElement && attributeName === "value" && target.value !== target.defaultValue
+  if (opened || typed) event.preventDefault()
 })

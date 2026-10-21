@@ -52,6 +52,10 @@ Water the plants (@friday 6pm)
   opens the app, where the note's name opens it in Obsidian at the heading the
   reminder is under (Obsidian links can't point to a line).
 - Checked-off tasks (`- [x]`) don't notify.
+- Reminders can be added in the app too, once a user picks a note for them in
+  **Settings** (in one of their folders). "Call the dentist" and "tomorrow 9am"
+  become `- [ ] Call the dentist (@tomorrow 9am)` at the end of that note, which
+  is created if need be.
 - Lines indented under a reminder's line are its notes. The app shows a notes
   icon on reminders that have them; tapping the reminder opens them. Editing
   notes doesn't change the reminder's time.

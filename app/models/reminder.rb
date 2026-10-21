@@ -68,7 +68,7 @@ class Reminder < ApplicationRecord
   end
 
   def check_off_in_vault
-    Vault.new(Rails.configuration.x.vault_path).check_off(note_path:, line:)
+    Vault.synced.check_off(note_path:, line:)
   end
 
   # Stays unsent, to be retried, when none of the recipients' devices accept the notification.

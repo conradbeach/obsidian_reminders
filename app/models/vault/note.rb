@@ -1,4 +1,4 @@
-# A note in the vault, for checking off a reminder's line.
+# A note in the vault, for checking off and adding reminders' lines.
 class Vault::Note
   TASK = /\A((?:[-*+]|\d+[.)])\s+)\[.\]\s*/
   LIST_ITEM = /\A((?:[-*+]|\d+[.)])\s+)/
@@ -17,6 +17,13 @@ class Vault::Note
     lines[matches.sole] = checked(lines[matches.sole])
     replace_with(lines.join)
     true
+  end
+
+  def append(line)
+    content = @path.exist? ? @path.read : ""
+    content += "\n" unless content.empty? || content.end_with?("\n")
+    @path.dirname.mkpath
+    replace_with("#{content}#{line}\n")
   end
 
   private

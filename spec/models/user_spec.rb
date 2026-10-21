@@ -21,6 +21,33 @@ RSpec.describe User do
     end
   end
 
+  describe "reminders note normalization" do
+    it "drops a leading slash and surrounding spaces, and adds a missing .md" do
+      expect(build(:user, reminders_note: " /Tabitha/Inbox ").reminders_note).to eq("Tabitha/Inbox.md")
+    end
+
+    it "treats a blank note as none" do
+      expect(build(:user, reminders_note: " ").reminders_note).to be_nil
+    end
+  end
+
+  describe "reminders note validation" do
+    context "when the note isn't in one of the user's folders" do
+      it "is invalid" do
+        user = build(:user, note_folders: ["Tabitha"], reminders_note: "Conrad/Inbox.md")
+
+        expect(user).to_not be_valid
+        expect(user.errors[:reminders_note]).to include("must be in one of your folders")
+      end
+    end
+
+    context "when the note is in one of the user's folders, in any case" do
+      it "is valid" do
+        expect(build(:user, note_folders: ["Tabitha"], reminders_note: "tabitha/Home/Inbox.md")).to be_valid
+      end
+    end
+  end
+
   describe "#reminders" do
     it "returns reminders from notes anywhere inside the user's folders, ignoring case" do
       user = create(:user, note_folders: ["Tabitha", "Family"])

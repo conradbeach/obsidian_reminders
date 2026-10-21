@@ -89,4 +89,44 @@ RSpec.describe "Reminders" do
       end
     end
   end
+
+  describe "POST /reminders" do
+    around do |example|
+      Dir.mktmpdir do |dir|
+        original_path = Rails.configuration.x.vault_path
+        Rails.configuration.x.vault_path = dir
+        example.run
+      ensure
+        Rails.configuration.x.vault_path = original_path
+      end
+    end
+
+    let(:inbox) { Pathname(Rails.configuration.x.vault_path).join("Tabitha/Inbox.md") }
+
+    it "adds the reminder to the end of the user's note and lists it at once" do
+      travel_to Time.zone.parse("2026-10-19 18:00")
+      sign_in create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
+
+      post reminders_path, params: { reminder_addition: { text: " Call the  dentist ", time: "tomorrow 9am" } }
+      follow_redirect!
+
+      expect(inbox.read).to eq("- [ ] Call the dentist (@tomorrow 9am)\n")
+      expect(Reminder.sole).to have_attributes(note_path: "Tabitha/Inbox.md", directive: "tomorrow 9am",
+        remind_at: Time.zone.parse("2026-10-20 09:00"))
+      expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)).to eq(["Call the dentist"])
+    end
+
+    context "when the time isn't understood" do
+      it "shows the error and adds nothing" do
+        sign_in create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
+
+        post reminders_path, params: { reminder_addition: { text: "Call the dentist", time: "whenever" } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body.at_css("#new-reminder").text).to include("When isn't a time the app understands")
+        expect(inbox).to_not exist
+        expect(Reminder.count).to eq(0)
+      end
+    end
+  end
 end

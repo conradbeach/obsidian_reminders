@@ -110,6 +110,27 @@ RSpec.describe Vault do
     end
   end
 
+  describe "#append" do
+    context "when the note exists" do
+      it "adds the line at the end, on a line of its own" do
+        write_note("Reminders.md", "# Reminders\n- [ ] Call the dentist (@friday)")
+
+        described_class.new(vault_path).append(note_path: "Reminders.md", line: "- [ ] Return books (@monday)")
+
+        expect(vault_path.join("Reminders.md").read)
+          .to eq("# Reminders\n- [ ] Call the dentist (@friday)\n- [ ] Return books (@monday)\n")
+      end
+    end
+
+    context "when the note doesn't exist" do
+      it "creates it, along with its folders" do
+        described_class.new(vault_path).append(note_path: "Tabitha/Inbox.md", line: "- [ ] Return books (@monday)")
+
+        expect(vault_path.join("Tabitha/Inbox.md").read).to eq("- [ ] Return books (@monday)\n")
+      end
+    end
+  end
+
   describe "#check_off" do
     def check_off(line)
       described_class.new(vault_path).check_off(note_path: "Errands.md", line:)

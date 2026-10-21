@@ -15,6 +15,10 @@ class Vault
   HEADING = /\A\#{1,6}\s+(.+?)(?:\s+\#+)?\z/
   TAB = "    ".freeze
 
+  def self.synced
+    new(Rails.configuration.x.vault_path)
+  end
+
   def initialize(path)
     @path = Pathname(path)
   end
@@ -29,6 +33,11 @@ class Vault
   # Checks off the reminder's line in its note. Returns whether the note had exactly one such line to check off.
   def check_off(note_path:, line:)
     synchronize { Note.new(@path.join(note_path)).check_off(line) }
+  end
+
+  # Adds the line to the end of the note, creating the note if need be.
+  def append(note_path:, line:)
+    synchronize { Note.new(@path.join(note_path)).append(line) }
   end
 
   private

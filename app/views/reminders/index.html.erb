@@ -21,6 +21,25 @@
     </section>
   <% end %>
 
+  <% if Current.user.reminders_note %>
+    <%= form_with model: @addition, url: reminders_path, id: "new-reminder",
+          class: "mb-6 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm",
+          data: { controller: "reset-form", action: "turbo:submit-end->reset-form#reset" } do |form| %>
+      <% if @addition.errors.any? %>
+        <ul class="mb-3 text-sm font-medium text-red-700 dark:text-red-300">
+          <% @addition.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
+        </ul>
+      <% end %>
+      <%= form.label :text, "New reminder", class: "sr-only" %>
+      <%= form.text_field :text, placeholder: "Call the dentist", autocomplete: "off", class: "input" %>
+      <div class="mt-2 flex gap-2">
+        <%= form.label :time, "When", class: "sr-only" %>
+        <%= form.text_field :time, placeholder: "tomorrow 9am", autocomplete: "off", class: "input" %>
+        <%= form.submit "Add", class: "btn-primary" %>
+      </div>
+    <% end %>
+  <% end %>
+
   <% if @overdue.any? %>
     <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 dark:bg-red-950/40 p-4 shadow-sm">
       <h2 class="font-semibold text-red-800 dark:text-red-300">Overdue</h2>

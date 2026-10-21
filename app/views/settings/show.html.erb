@@ -39,5 +39,14 @@
     <%= form.number_field :overdue_after_hours, min: 0, step: 1, class: "input mt-3 w-24" %>
   </section>
 
+  <section id="new-reminders" class="rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">
+    <h2 class="font-semibold">New reminders</h2>
+    <%= form.label :reminders_note, "Note that reminders added in the app go in", class: "mt-2 block" %>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      A path from the vault's root, in one of your folders. Each reminder is added to the end of the note as a task.
+    </p>
+    <%= form.text_field :reminders_note, placeholder: "Tabitha/Reminders.md", class: "input mt-3 font-mono" %>
+  </section>
+
   <%= form.submit "Save", class: "btn-primary" %>
 <% end %>

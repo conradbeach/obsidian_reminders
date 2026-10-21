@@ -1,4 +1,6 @@
 class Reminders::CompletionsController < ApplicationController
+  allow_token_authentication only: :create
+
   def create
     Current.user.reminders.find(params.expect(:reminder_id)).complete
 

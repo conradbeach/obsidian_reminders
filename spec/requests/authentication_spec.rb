@@ -72,6 +72,16 @@ RSpec.describe "Authentication" do
       expect(response.parsed_body["reminders"].pluck("text")).to eq(["Call the dentist"])
     end
 
+    context "when the action isn't part of the API" do
+      it "doesn't accept the token" do
+        user = create(:user)
+
+        get settings_path(format: :json), headers: { "Authorization" => "Bearer #{user.api_token}" }
+
+        expect(response).to redirect_to(new_session_path)
+      end
+    end
+
     context "when the token is wrong" do
       it "responds unauthorized, even with a signed-in session" do
         sign_in

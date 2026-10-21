@@ -84,7 +84,8 @@ or replace in **Settings**:
 curl -H "Authorization: Bearer $TOKEN" https://reminders.example.ts.net/reminders.json
 ```
 
-A missing or wrong token gets `401 Unauthorized`. Times are ISO 8601 in the
+A missing or wrong token gets `401 Unauthorized`. The token works only for the
+routes below. Times are ISO 8601 in the
 app's time zone (Mountain).
 
 ### `GET /reminders.json`

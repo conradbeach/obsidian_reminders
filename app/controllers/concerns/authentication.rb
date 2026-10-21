@@ -2,6 +2,7 @@ module Authentication
   extend ActiveSupport::Concern
 
   included do
+    class_attribute :token_actions, default: []
     # Cookies don't authenticate a request with a token, so forged requests can't use them.
     skip_forgery_protection if: :token_request?
     before_action :require_authentication
@@ -11,6 +12,11 @@ module Authentication
   class_methods do
     def allow_unauthenticated_access(**)
       skip_before_action(:require_authentication, **)
+    end
+
+    # The API: these actions' JSON accepts a user's API token. Everything else needs a browser session.
+    def allow_token_authentication(only:)
+      self.token_actions = Array(only).map(&:to_s)
     end
   end
 
@@ -29,7 +35,7 @@ module Authentication
   end
 
   def token_request?
-    request.authorization.to_s.start_with?("Bearer ")
+    token_actions.include?(action_name) && request.format.json? && request.authorization.to_s.start_with?("Bearer ")
   end
 
   def authenticate_by_token

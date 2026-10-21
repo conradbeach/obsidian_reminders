@@ -25,7 +25,7 @@
     <section id="overdue-reminders" class="mb-6 rounded-xl bg-red-50 dark:bg-red-950/40 p-4 shadow-sm">
       <h2 class="font-semibold text-red-800 dark:text-red-300">Overdue</h2>
       <ul class="divide-y divide-red-100 dark:divide-red-900/50">
-        <%= render partial: "reminder", collection: @overdue, locals: { with_date: true } %>
+        <%= render partial: "reminder", collection: @overdue, locals: { overdue: true } %>
       </ul>
     </section>
   <% end %>
@@ -48,8 +48,8 @@
   </nav>
 
   <div id="upcoming-reminders" class="space-y-4">
-    <% if @upcoming_by_day.any? %>
-      <% @upcoming_by_day.each do |date, reminders| %>
+    <% if @current_by_day.any? %>
+      <% @current_by_day.each do |date, reminders| %>
         <section class="rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">
           <h2 class="font-semibold text-violet-800 dark:text-violet-200"><%= reminder_day_heading(date) %></h2>
           <ul class="divide-y divide-gray-100 dark:divide-gray-800"><%= render reminders %></ul>

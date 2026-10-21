@@ -3,7 +3,7 @@
         class: "mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 dark:border-violet-500 hover:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950" do %>
   <% end %>
   <div class="min-w-0">
-    <p class="font-medium"><%= reminder.text %></p>
+    <p class="<%= class_names("font-medium", "text-gray-500 dark:text-gray-400": reminder.remind_at&.past? && !local_assigns[:overdue]) %>"><%= reminder.text %></p>
     <p class="text-sm text-gray-500 dark:text-gray-400">
       <% if reminder.recurrence %>
         <svg class="inline size-3.5 -mt-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
@@ -12,7 +12,7 @@
         </svg>
       <% end %>
       <% if reminder.remind_at %>
-        <%= reminder.remind_at.strftime(local_assigns[:with_date] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
+        <%= reminder.remind_at.strftime(local_assigns[:overdue] ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
       <% else %>
         Couldn't understand “<%= reminder.directive %>” ·
       <% end %>

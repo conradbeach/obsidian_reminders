@@ -13,4 +13,8 @@ html {
     @apply shrink-0 whitespace-nowrap rounded-lg bg-violet-100 px-3.5 py-2 font-medium text-violet-800 hover:bg-violet-200 cursor-pointer
       dark:bg-violet-900/60 dark:text-violet-200 dark:hover:bg-violet-900;
   }
+
+  .input {
+    @apply block w-full rounded-md border border-gray-300 px-3 py-2 focus:outline-violet-600 dark:border-gray-700 dark:bg-gray-950;
+  }
 }

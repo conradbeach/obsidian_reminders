@@ -60,4 +60,26 @@ RSpec.describe "Authentication" do
       expect(response).to redirect_to(new_session_path)
     end
   end
+
+  describe "requesting JSON with an API token" do
+    it "authenticates as the token's user" do
+      user = create(:user, note_folders: ["Tabitha"])
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "Call the dentist (@friday)")
+
+      get reminders_path(format: :json), headers: { "Authorization" => "Bearer #{user.api_token}" }
+
+      expect(response).to have_http_status(:ok)
+      expect(response.parsed_body["reminders"].pluck("text")).to eq(["Call the dentist"])
+    end
+
+    context "when the token is wrong" do
+      it "responds unauthorized, even with a signed-in session" do
+        sign_in
+
+        get reminders_path(format: :json), headers: { "Authorization" => "Bearer wrong" }
+
+        expect(response).to have_http_status(:unauthorized)
+      end
+    end
+  end
 end

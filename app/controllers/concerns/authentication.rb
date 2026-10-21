@@ -2,6 +2,8 @@ module Authentication
   extend ActiveSupport::Concern
 
   included do
+    # Cookies don't authenticate a request with a token, so forged requests can't use them.
+    skip_forgery_protection if: :token_request?
     before_action :require_authentication
     helper_method :authenticated?
   end
@@ -19,7 +21,19 @@ module Authentication
   end
 
   def require_authentication
-    resume_session || request_authentication
+    if token_request?
+      authenticate_by_token || request_http_token_authentication
+    else
+      resume_session || request_authentication
+    end
+  end
+
+  def token_request?
+    request.authorization.to_s.start_with?("Bearer ")
+  end
+
+  def authenticate_by_token
+    authenticate_with_http_token { |token| Current.user = User.find_by(api_token: token) }
   end
 
   def resume_session

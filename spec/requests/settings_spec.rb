@@ -35,4 +35,17 @@ RSpec.describe "Settings" do
       end
     end
   end
+
+  describe "POST /api_token" do
+    it "replaces the user's API token" do
+      user = sign_in
+      old_token = user.api_token
+
+      post api_token_path
+
+      expect(response).to redirect_to(settings_path(anchor: "api-token"))
+      expect(user.reload.api_token).to be_present
+      expect(user.api_token).to_not eq(old_token)
+    end
+  end
 end

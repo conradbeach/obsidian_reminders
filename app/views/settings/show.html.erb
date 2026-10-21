@@ -50,3 +50,16 @@
 
   <%= form.submit "Save", class: "btn-primary" %>
 <% end %>
+
+<section id="api-token" class="mt-6 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">
+  <h2 class="font-semibold">API token</h2>
+  <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+    Lets other apps, like the Omarchy bar widget, read, add, and complete your reminders. Replacing it signs them out.
+  </p>
+  <% if Current.user.api_token %>
+    <%= label_tag :api_token, "Your API token", class: "sr-only" %>
+    <%= text_field_tag :api_token, Current.user.api_token, readonly: true, class: "input mt-3 font-mono text-sm" %>
+  <% end %>
+  <%= button_to Current.user.api_token ? "Replace token" : "Create token", api_token_path,
+        class: "btn-secondary mt-3", form: { data: { turbo_confirm: (Current.user.api_token && "Replace your API token? Apps using it will stop working.") } } %>
+</section>

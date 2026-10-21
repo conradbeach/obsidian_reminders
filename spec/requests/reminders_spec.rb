@@ -90,6 +90,23 @@ RSpec.describe "Reminders" do
     end
   end
 
+  describe "GET /reminders.json" do
+    it "returns the user's overdue hours and scheduled reminders, soonest first" do
+      user = create(:user, note_folders: ["Tabitha"], overdue_after_hours: 6)
+      create(:reminder, line: "- [ ] Renew passport (@Dec 1)", remind_at: Time.zone.parse("2026-12-01 09:00"))
+      create(:reminder, line: "- [ ] Take vitamins (@every day at 8am)", directive: "every day at 8am",
+        remind_at: Time.zone.parse("2026-10-20 08:00"), heading: "Health", notes: "With breakfast")
+      create(:reminder, line: "Water the plants (@whenever)", directive: "whenever", remind_at: nil)
+
+      get reminders_path(format: :json), headers: { "Authorization" => "Bearer #{user.api_token}" }
+
+      expect(response.parsed_body["overdue_after_hours"]).to eq(6)
+      expect(response.parsed_body["reminders"].pluck("text")).to eq(["Take vitamins", "Renew passport"])
+      expect(response.parsed_body["reminders"].first).to include("remind_at" => "2026-10-20T08:00:00.000-06:00",
+        "recurring" => true, "note_path" => "Tabitha/Errands.md", "heading" => "Health", "notes" => "With breakfast")
+    end
+  end
+
   describe "POST /reminders" do
     around do |example|
       Dir.mktmpdir do |dir|
@@ -125,6 +142,31 @@ RSpec.describe "Reminders" do
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.parsed_body.at_css("#new-reminder").text).to include("When isn't a time the app understands")
         expect(inbox).to_not exist
+        expect(Reminder.count).to eq(0)
+      end
+    end
+
+    context "when requesting JSON" do
+      it "returns the new reminder" do
+        user = create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
+
+        post reminders_path(format: :json), params: { reminder_addition: { text: "Call the dentist", time: "friday" } },
+          headers: { "Authorization" => "Bearer #{user.api_token}" }
+
+        expect(response).to have_http_status(:created)
+        expect(response.parsed_body).to include("id" => Reminder.sole.id, "text" => "Call the dentist")
+      end
+    end
+
+    context "when requesting JSON for a user who hasn't chosen a note for new reminders" do
+      it "returns the error and adds nothing" do
+        user = create(:user, note_folders: ["Tabitha"])
+
+        post reminders_path(format: :json), params: { reminder_addition: { text: "Call the dentist", time: "friday" } },
+          headers: { "Authorization" => "Bearer #{user.api_token}" }
+
+        expect(response).to have_http_status(:unprocessable_content)
+        expect(response.parsed_body["errors"]).to eq(["Choose a note for new reminders in Settings first"])
         expect(Reminder.count).to eq(0)
       end
     end

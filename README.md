@@ -73,6 +73,66 @@ Water the plants (@friday 6pm)
   checkbox if the line had none), which reaches her other devices within about
   a minute. Obsidian Sync's version history can undo it.
 
+## API
+
+Other apps, like the Omarchy bar widget in
+[conradbeach/dotfiles](https://github.com/conradbeach/dotfiles), use the same
+routes as the web app with `.json` and a user's API token, which they create
+or replace in **Settings**:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" https://reminders.example.ts.net/reminders.json
+```
+
+A missing or wrong token gets `401 Unauthorized`. Times are ISO 8601 in the
+app's time zone (Mountain).
+
+### `GET /reminders.json`
+
+The user's reminders that have a time, soonest first, overdue ones included.
+A reminder is overdue once it's `overdue_after_hours` past its `remind_at`.
+
+```json
+{
+  "overdue_after_hours": 24,
+  "reminders": [
+    {
+      "id": 12,
+      "text": "Take vitamins",
+      "remind_at": "2026-10-22T08:00:00.000-06:00",
+      "recurring": true,
+      "note_path": "Conrad/Health.md",
+      "heading": "Daily",
+      "notes": "With breakfast"
+    }
+  ]
+}
+```
+
+`heading` (the nearest heading above the reminder's line) and `notes` (the
+lines nested under it) may be `null`.
+
+### `POST /reminders.json`
+
+Adds a reminder to the end of the user's note for new reminders, like the add
+form does. Takes `reminder_addition[text]` and `reminder_addition[time]` (any
+time a directive takes, without `(@` and `)`), as form or JSON parameters:
+
+```bash
+curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+  -d '{"reminder_addition": {"text": "Call the dentist", "time": "tomorrow 9am"}}' \
+  https://reminders.example.ts.net/reminders.json
+```
+
+Responds `201 Created` with the reminder, shaped as above, or
+`422 Unprocessable Content` with `{"errors": ["When isn't a time the app understands"]}`.
+
+### `POST /reminders/:id/completion.json`
+
+Marks the reminder done, like its circle in the app: a repeating reminder moves
+to its next occurrence; any other is checked off in its note. Responds
+`204 No Content`, or `404 Not Found` if it isn't one of the user's reminders.
+
 ## How it works
 
 - **Obsidian Headless** ([`ob`](https://obsidian.md/help/sync/headless)) runs as

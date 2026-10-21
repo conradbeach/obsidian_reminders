@@ -1,11 +1,12 @@
 Rails.application.routes.draw do
   resource :session
   resource :push_subscription, only: [:create, :destroy]
-  resources :reminders, only: :create do
+  resources :reminders, only: [:index, :create] do
     resource :completion, only: :create, module: :reminders
   end
   resource :settings, only: [:show, :update]
   resource :reminder_filter, only: :update
+  resource :api_token, only: :create
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

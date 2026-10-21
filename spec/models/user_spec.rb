@@ -41,6 +41,15 @@ RSpec.describe User do
       end
     end
 
+    context "when the note's path climbs out of the user's folder" do
+      it "is invalid" do
+        user = build(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/../../outside.md")
+
+        expect(user).to_not be_valid
+        expect(user.errors[:reminders_note]).to include("must be in one of your folders")
+      end
+    end
+
     context "when the note is in one of the user's folders, in any case" do
       it "is valid" do
         expect(build(:user, note_folders: ["Tabitha"], reminders_note: "tabitha/Home/Inbox.md")).to be_valid

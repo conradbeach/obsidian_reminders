@@ -11,6 +11,7 @@ class Reminder < ApplicationRecord
 
   scope :in_vault, -> { where(missing_since: nil) }
   scope :incomplete, -> { where(completed_at: nil) }
+  scope :scheduled, -> { where.not(remind_at: nil).order(:remind_at) }
   scope :scheduled_since, ->(time) { where(remind_at: time..).order(:remind_at) }
   scope :scheduled_before, ->(time) { where(remind_at: ...time).order(:remind_at) }
   scope :through_today, -> { where(remind_at: ..Time.current.end_of_day) }
@@ -30,7 +31,7 @@ class Reminder < ApplicationRecord
 
     transaction do
       vault.reminders.each do |attributes|
-        reminder = unmatched.delete(attributes.slice(*IDENTITY)) || scheduled(attributes)
+        reminder = unmatched.delete(attributes.slice(*IDENTITY)) || first_seen(attributes)
         reminder.update!(**attributes.slice(:heading, :notes), missing_since: nil)
       end
       mark_missing(unmatched.values)
@@ -43,10 +44,10 @@ class Reminder < ApplicationRecord
   end
   private_class_method :mark_missing
 
-  def self.scheduled(attributes)
+  def self.first_seen(attributes)
     new(attributes.slice(*IDENTITY).merge(remind_at: Directive.new(attributes[:directive]).time))
   end
-  private_class_method :scheduled
+  private_class_method :first_seen
 
   def self.notify_due
     due.find_each(&:notify)
@@ -80,6 +81,10 @@ class Reminder < ApplicationRecord
   # The users whose folders contain the reminder's note.
   def recipients
     User.all.select { it.reminders.exists?(id) }
+  end
+
+  def as_json(*)
+    { id:, text:, remind_at:, recurring: recurrence.present?, note_path:, heading:, notes: }
   end
 
   # The line without its list marker, checkbox, or directives.

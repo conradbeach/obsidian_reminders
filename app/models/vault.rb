@@ -77,17 +77,18 @@ class Vault
     end
   end
 
-  # The lines nested under the one at index (indented further, with any blank lines between them), without their
-  # shared indentation.
+  # The lines nested under the one at index: indented further, with any blank lines between them.
   def notes_under(lines, index)
     depth = indentation(lines[index])
     nested = lines.drop(index + 1).take_while { it.blank? || indentation(it) > depth }
-    nested = nested.reverse.drop_while(&:blank?).reverse
-    return if nested.empty?
+    dedent(nested.reverse.drop_while(&:blank?).reverse).presence
+  end
 
-    nested = nested.map { it.sub(/\A\s+/) { |indent| indent.gsub("\t", TAB) }.rstrip }
-    shared = nested.compact_blank.map { indentation(it) }.min
-    nested.map { it.delete_prefix(" " * shared) }.join("\n")
+  # The lines as one string, without their shared indentation.
+  def dedent(lines)
+    lines = lines.map { it.sub(/\A\s+/) { |indent| indent.gsub("\t", TAB) }.rstrip }
+    shared = lines.compact_blank.map { indentation(it) }.min.to_i
+    lines.map { it.delete_prefix(" " * shared) }.join("\n")
   end
 
   def indentation(line)

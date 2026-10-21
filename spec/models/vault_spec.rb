@@ -46,13 +46,10 @@ RSpec.describe Vault do
 
             - Number: 555-0100
           - [ ] Pick up dry cleaning (@friday)
-            - Ticket 42
         MARKDOWN
 
-        expect(described_class.new(vault_path).reminders.pluck(:notes)).to eq([
-          "Ask about the crown\n  - Bring the insurance card\n\n- Number: 555-0100",
-          "- Ticket 42",
-        ])
+        notes = described_class.new(vault_path).reminders.pluck(:notes)
+        expect(notes).to eq(["Ask about the crown\n  - Bring the insurance card\n\n- Number: 555-0100", nil])
       end
     end
 

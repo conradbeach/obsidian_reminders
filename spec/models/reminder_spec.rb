@@ -40,13 +40,14 @@ RSpec.describe Reminder do
       end
     end
 
-    context "when a reminder's line is now under a different heading" do
-      it "updates the heading without rescheduling the reminder" do
-        reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, heading: "Errands")
+    context "when a reminder's line is now under a different heading and has new notes" do
+      it "updates the heading and notes without rescheduling the reminder" do
+        reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, heading: "Errands", notes: nil)
 
-        described_class.sync(vault_with(dentist.merge(heading: "This week")))
+        described_class.sync(vault_with(dentist.merge(heading: "This week", notes: "Ask about the crown")))
 
-        expect(described_class.sole).to have_attributes(id: reminder.id, remind_at: 2.hours.ago, heading: "This week")
+        expect(described_class.sole).to have_attributes(id: reminder.id, remind_at: 2.hours.ago, heading: "This week",
+          notes: "Ask about the crown")
       end
     end
 

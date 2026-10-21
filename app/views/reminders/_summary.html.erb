@@ -1,0 +1,21 @@
+<div class="min-w-0 flex-1">
+  <p class="<%= class_names("font-medium", "text-gray-500 dark:text-gray-400": reminder.remind_at&.past? && !overdue) %>"><%= reminder.text %></p>
+  <p class="text-sm text-gray-500 dark:text-gray-400">
+    <% if reminder.recurrence %>
+      <svg class="inline size-3.5 -mt-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"
+        stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="Repeats">
+        <path d="M3 7a5 5 0 0 1 8.5-3.5L13 5M13 2v3h-3M13 9a5 5 0 0 1-8.5 3.5L3 11M3 14v-3h3"/>
+      </svg>
+    <% end %>
+    <% if reminder.remind_at %>
+      <%= reminder.remind_at.strftime(overdue ? "%a, %b %-d at %-l:%M %p" : "%-l:%M %p") %> ·
+    <% else %>
+      Couldn't understand “<%= reminder.directive %>” ·
+    <% end %>
+    in <%= link_to reminder.obsidian_url, class: "inline-flex items-center gap-0.5 whitespace-nowrap font-medium text-violet-700 dark:text-violet-300" do %>
+      <%= reminder.note_name %>
+      <svg class="size-3.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        stroke-linejoin="round" aria-hidden="true"><path d="M5 11 11 5M6 5h5v5"/></svg>
+    <% end %>
+  </p>
+</div>

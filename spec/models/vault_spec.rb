@@ -18,7 +18,7 @@ RSpec.describe Vault do
 
         expect(described_class.new(vault_path).reminders).to contain_exactly(
           { note_path: "Home/Errands.md", line: "- [ ] Call the dentist (@tomorrow 9am)", directive: "tomorrow 9am",
-            heading: "Errands" },
+            heading: "Errands", notes: nil },
         )
       end
     end
@@ -34,6 +34,25 @@ RSpec.describe Vault do
         MARKDOWN
 
         expect(described_class.new(vault_path).reminders.pluck(:heading)).to eq([nil, "This week", "This week"])
+      end
+    end
+
+    context "when lines are nested under a directive's line" do
+      it "returns them as its notes, without their shared indentation, up to the next line that isn't nested" do
+        write_note("Errands.md", <<~MARKDOWN)
+          - [ ] Call the dentist (@friday)
+            Ask about the crown
+          \t- Bring the insurance card
+
+            - Number: 555-0100
+          - [ ] Pick up dry cleaning (@friday)
+            - Ticket 42
+        MARKDOWN
+
+        expect(described_class.new(vault_path).reminders.pluck(:notes)).to eq([
+          "Ask about the crown\n  - Bring the insurance card\n\n- Number: 555-0100",
+          "- Ticket 42",
+        ])
       end
     end
 

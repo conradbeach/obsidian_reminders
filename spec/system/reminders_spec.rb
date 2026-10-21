@@ -55,16 +55,18 @@ RSpec.describe "Reminders" do
     expect(page).to have_content("Ask about the crown")
   end
 
-  it "keeps what's typed into a new reminder as the list refreshes, and clears it once added" do
+  it "opens the new reminder form from the + button, keeps what's typed as the list refreshes, and closes once added" do
     user = create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
     visit root_path
     sign_in_as(user)
+    expect(page).to have_no_field("Reminder")
 
-    fill_in "New reminder", with: "Call the dentist"
+    click_on "New reminder"
+    fill_in "Reminder", with: "Call the dentist"
     create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
     page.execute_script("document.dispatchEvent(new Event('visibilitychange'))")
     expect(page).to have_content("Pick up dry cleaning")
-    expect(page).to have_field("New reminder", with: "Call the dentist")
+    expect(page).to have_field("Reminder", with: "Call the dentist")
 
     original_path = Rails.configuration.x.vault_path
     Dir.mktmpdir do |dir|
@@ -73,7 +75,9 @@ RSpec.describe "Reminders" do
       click_on "Add"
 
       expect(page).to have_css("#upcoming-reminders", text: "Call the dentist")
-      expect(page).to have_field("New reminder", with: "")
+      expect(page).to have_no_field("Reminder")
+      click_on "New reminder"
+      expect(page).to have_field("Reminder", with: "")
     ensure
       Rails.configuration.x.vault_path = original_path
     end

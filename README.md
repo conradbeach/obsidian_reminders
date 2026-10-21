@@ -52,6 +52,9 @@ Water the plants (@friday 6pm)
   opens the app, where the note's name opens it in Obsidian at the heading the
   reminder is under (Obsidian links can't point to a line).
 - Checked-off tasks (`- [x]`) don't notify.
+- Lines indented under a reminder's line are its notes. The app shows a notes
+  icon on reminders that have them; tapping the reminder opens them. Editing
+  notes doesn't change the reminder's time.
 - Editing anything on a reminder's line, even a typo, makes it a new reminder
   whose time is read again at that moment. A relative directive has to be
   updated along with the edit: fixing a typo tomorrow in a `(@tomorrow)`

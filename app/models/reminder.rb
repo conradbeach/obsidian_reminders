@@ -23,14 +23,15 @@ class Reminder < ApplicationRecord
 
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
   # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted once they've been missing
-  # for the grace period. A reminder whose line is now under a different heading keeps its time.
+  # for the grace period. A reminder whose line is now under a different heading, or whose notes changed, keeps its
+  # time.
   def self.sync(vault)
     unmatched = all.index_by { it.slice(*IDENTITY).symbolize_keys }
 
     transaction do
       vault.reminders.each do |attributes|
         reminder = unmatched.delete(attributes.slice(*IDENTITY)) || scheduled(attributes)
-        reminder.update!(heading: attributes[:heading], missing_since: nil)
+        reminder.update!(**attributes.slice(:heading, :notes), missing_since: nil)
       end
       mark_missing(unmatched.values)
     end

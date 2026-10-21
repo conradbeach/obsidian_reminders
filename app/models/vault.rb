@@ -13,6 +13,7 @@ class Vault
   CODE_FENCE = /\A(```|~~~)/
   INLINE_CODE = /`[^`]*`/
   HEADING = /\A\#{1,6}\s+(.+?)(?:\s+\#+)?\z/
+  TAB = "    ".freeze
 
   def initialize(path)
     @path = Pathname(path)
@@ -51,14 +52,16 @@ class Vault
 
   def reminders_in(note)
     note_path = note.relative_path_from(@path).to_s
+    lines = prose_lines(note)
     heading = nil
 
-    prose_lines(note).flat_map do |line|
+    lines.each_with_index.flat_map do |raw_line, index|
+      line = raw_line.strip
       heading = Regexp.last_match(1) if line.match(HEADING)
       next [] if line.match?(COMPLETED_TASK)
 
       line.gsub(INLINE_CODE, "").scan(DIRECTIVE).map do |(directive)|
-        { note_path:, line:, directive: directive.strip, heading: }
+        { note_path:, line:, directive: directive.strip, heading:, notes: notes_under(lines, index) }
       end
     end
   end
@@ -67,10 +70,28 @@ class Vault
   def prose_lines(note)
     in_code_block = false
 
-    note.each_line.map(&:strip).reject do |line|
-      fence = line.match?(CODE_FENCE)
+    note.each_line(chomp: true).reject do |line|
+      fence = line.strip.match?(CODE_FENCE)
       in_code_block = !in_code_block if fence
       fence || in_code_block
     end
+  end
+
+  # The lines nested under the one at index: indented further, with any blank lines between them.
+  def notes_under(lines, index)
+    depth = indentation(lines[index])
+    nested = lines.drop(index + 1).take_while { it.blank? || indentation(it) > depth }
+    dedent(nested.reverse.drop_while(&:blank?).reverse).presence
+  end
+
+  # The lines as one string, without their shared indentation.
+  def dedent(lines)
+    lines = lines.map { it.sub(/\A\s+/) { |indent| indent.gsub("\t", TAB) }.rstrip }
+    shared = lines.compact_blank.map { indentation(it) }.min.to_i
+    lines.map { it.delete_prefix(" " * shared) }.join("\n")
+  end
+
+  def indentation(line)
+    line[/\A\s*/].gsub("\t", TAB).length
   end
 end

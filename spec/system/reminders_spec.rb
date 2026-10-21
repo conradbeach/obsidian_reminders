@@ -37,4 +37,21 @@ RSpec.describe "Reminders" do
 
     expect(page).to have_content("Nothing coming up")
   end
+
+  it "shows a reminder's notes when tapped, and keeps them open as the list refreshes" do
+    user = create(:user, note_folders: ["Tabitha"])
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Call the dentist (@friday)",
+      notes: "Ask about the crown")
+    visit root_path
+    sign_in_as(user)
+    expect(page).to have_no_content("Ask about the crown")
+
+    find("summary", text: "Call the dentist").click
+    expect(page).to have_content("Ask about the crown")
+
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
+    page.execute_script("document.dispatchEvent(new Event('visibilitychange'))")
+    expect(page).to have_content("Pick up dry cleaning")
+    expect(page).to have_content("Ask about the crown")
+  end
 end

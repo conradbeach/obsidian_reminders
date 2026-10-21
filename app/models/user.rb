@@ -1,5 +1,7 @@
 class User < ApplicationRecord
   has_secure_password
+  # Authenticates the API's clients. Shown, and replaced on request, in Settings.
+  has_secure_token :api_token
   has_many :sessions, dependent: :destroy
   has_many :push_subscriptions, dependent: :destroy
 
@@ -30,8 +32,10 @@ class User < ApplicationRecord
 
   private
 
+  # Hidden folders aren't synced, and ".." could leave the folder, or the vault.
   def reminders_note_in_folders
-    return if note_folders.any? { reminders_note.downcase.start_with?("#{it.downcase}/") }
+    in_folder = note_folders.any? { reminders_note.downcase.start_with?("#{it.downcase}/") }
+    return if in_folder && reminders_note.split("/").none? { it.start_with?(".") }
 
     errors.add(:reminders_note, "must be in one of your folders")
   end

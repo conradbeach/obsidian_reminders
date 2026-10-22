@@ -65,6 +65,14 @@ RSpec.describe Reminder::Recurrence do
           done_at: Time.zone.parse("2026-10-31 20:00"))).to eq(Time.zone.parse("2027-10-30 09:00"))
       end
 
+      it "moves between calendar rules joined with \"and\"" do
+        twice_a_year = recurrence("every 2nd Saturday in November and 2nd Saturday in May")
+        november = Time.zone.parse("2026-11-14 09:00")
+
+        expect(twice_a_year.next_time(occurrence: november, done_at: november + 2.hours))
+          .to eq(Time.zone.parse("2027-05-08 09:00"))
+      end
+
       it "moves through a list of dates each year, whenever each is done" do
         quarterly = recurrence("every September 1st, December 1st, March 1st and June 1st")
         december = Time.zone.parse("2026-12-01 09:00")

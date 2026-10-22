@@ -29,6 +29,16 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when an unscheduled reminder's directive can now be parsed" do
+      it "schedules it relative to now" do
+        reminder = create(:reminder, **dentist, remind_at: nil)
+
+        described_class.sync(vault_with(dentist))
+
+        expect(described_class.sole).to have_attributes(id: reminder.id, remind_at: Time.zone.parse("2026-10-20 09:00"))
+      end
+    end
+
     context "when a reminder's directive is still in the vault" do
       it "keeps the reminder as it was, without rescheduling it" do
         reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, notified_at: 1.hour.ago)

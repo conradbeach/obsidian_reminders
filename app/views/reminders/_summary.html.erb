@@ -1,5 +1,5 @@
 <div class="min-w-0 flex-1">
-  <p class="<%= class_names("font-medium", "text-gray-500 dark:text-gray-400": reminder.remind_at&.past? && !overdue) %>"><%= reminder.text %></p>
+  <p class="font-medium"><%= reminder.text %></p>
   <p class="text-sm text-gray-500 dark:text-gray-400">
     <% if reminder.recurrence %>
       <svg class="inline size-3.5 -mt-0.5" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75"

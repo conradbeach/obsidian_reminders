@@ -24,7 +24,7 @@ RSpec.describe "Reminders" do
       expect(response.parsed_body.css("#upcoming-reminders li")).to be_empty
     end
 
-    it "keeps past reminders on their day, dimmed, until they're overdue" do
+    it "keeps past reminders on their day until they're overdue" do
       travel_to Time.zone.parse("2026-10-19 18:00")
       sign_in create(:user, note_folders: ["Tabitha"], overdue_after_hours: 24)
       create(:reminder, line: "Call the dentist (@9am)", remind_at: Time.zone.parse("2026-10-19 09:00"))
@@ -34,7 +34,6 @@ RSpec.describe "Reminders" do
 
       upcoming = response.parsed_body.css("#upcoming-reminders h2, #upcoming-reminders li p.font-medium")
       expect(upcoming.map(&:text)).to eq(["Yesterday", "Water the plants", "Today", "Call the dentist"])
-      expect(upcoming.last["class"]).to include("text-gray-500")
       expect(response.parsed_body.css("#overdue-reminders")).to be_empty
     end
 

@@ -71,7 +71,7 @@ Water the plants (@friday 6pm)
   updated along with the edit: fixing a typo tomorrow in a `(@tomorrow)`
   reminder means changing it to `(@today)` too. Absolute dates (`Oct 21 3pm`)
   are unaffected unless the date has passed.
-- A reminder whose time has passed stays listed on its day (dimmed, under
+- A reminder whose time has passed stays listed on its day (under
   **Yesterday** if need be) until it's been past for each user's overdue hours
   (24 by default, set in **Settings**). Then it moves to **Overdue**, where it
   stays, however old, until it's checked off or removed from the note.

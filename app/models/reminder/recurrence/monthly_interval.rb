@@ -4,6 +4,8 @@ class Reminder::Recurrence::MonthlyInterval
   PATTERN = /\A(?<count>other|\d+|[a-z]+)\s+months?\s+on\s+(?<day>.+)\z/
   # Far enough ahead to find a day that isn't in every month, like the 31st.
   SEARCH_DAYS = 366
+  # As far as the next occurrence is looked for, so a day its months never have can't keep the search going forever.
+  SEARCH_MONTHS = 12 * 8
 
   def self.parse(body, clock:, anchor:)
     match = PATTERN.match(body) or return
@@ -26,11 +28,11 @@ class Reminder::Recurrence::MonthlyInterval
   end
 
   # The day in the month so many months after the occurrence's, skipping ahead until it's past both the occurrence
-  # and when it was done.
+  # and when it was done. Nil if none of its months has the day ("every 12 months on the 31st from 2027-02-10").
   def next_time(occurrence:, done_at:)
-    month = occurrence.to_date.beginning_of_month
-    month = month.advance(months: @months) until (time = time_in(month)) && time > [occurrence, done_at].max
-    time
+    first_month = occurrence.to_date.beginning_of_month
+    (1..(SEARCH_MONTHS / @months)).lazy.map { time_in(first_month.advance(months: @months * it)) }
+      .find { it && it > [occurrence, done_at].max }
   end
 
   private

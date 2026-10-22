@@ -68,6 +68,13 @@ RSpec.describe Reminder::Recurrence do
           .to eq(Time.zone.parse("2027-05-16 09:00"))
       end
 
+      it "has no next time when none of its months has that day" do
+        never = recurrence("every 12 months on the 31st from 2027-02-10")
+        february = Time.zone.parse("2027-02-10 09:00")
+
+        expect(never.next_time(occurrence: february, done_at: february)).to be_nil
+      end
+
       it "skips a month without that day" do
         rent = recurrence("every 3 months on the 31st")
         january = Time.zone.parse("2027-01-31 09:00")

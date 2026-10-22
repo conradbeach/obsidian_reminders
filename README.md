@@ -31,6 +31,7 @@ Water the plants (@friday 6pm)
   - weekdays: `(@every weekday at 7:30am)`, `(@every monday and thursday at 7pm)`,
     `(@every 2 weeks on tuesday at 7:50am)`
   - dates: `(@every year on october 1)`, `(@every april 19)`,
+    `(@every sep 1, dec 1, mar 1 and jun 1)`,
     `(@every month on the 15th)`, `(@every 2nd tue)`,
     `(@every last saturday in october)`, `(@every 3rd sat of sep)`
 

@@ -64,6 +64,16 @@ RSpec.describe Reminder::Recurrence do
         expect(halloween_party.next_time(occurrence: Time.zone.parse("2026-10-31 09:00"),
           done_at: Time.zone.parse("2026-10-31 20:00"))).to eq(Time.zone.parse("2027-10-30 09:00"))
       end
+
+      it "moves through a list of dates each year, whenever each is done" do
+        quarterly = recurrence("every September 1st, December 1st, March 1st and June 1st")
+        december = Time.zone.parse("2026-12-01 09:00")
+
+        expect(quarterly.next_time(occurrence: december, done_at: december + 4.days))
+          .to eq(Time.zone.parse("2027-03-01 09:00"))
+        expect(quarterly.next_time(occurrence: Time.zone.parse("2027-06-01 09:00"), done_at: december + 6.months))
+          .to eq(Time.zone.parse("2027-09-01 09:00"))
+      end
     end
   end
 end

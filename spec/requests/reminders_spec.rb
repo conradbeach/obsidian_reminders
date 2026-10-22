@@ -174,7 +174,8 @@ RSpec.describe "Reminders" do
 
         expect(response).to have_http_status(:unprocessable_content)
         expect(response.parsed_body.at_css("#new-reminder")["hidden"]).to be_nil
-        expect(response.parsed_body.at_css("#new-reminder").text).to include("When isn't a time the app understands")
+        expect(response.parsed_body.at_css("#new-reminder").text)
+          .to include("Needs a clearer time. Couldn't understand “whenever”.")
         expect(inbox).to_not exist
         expect(Reminder.count).to eq(0)
       end

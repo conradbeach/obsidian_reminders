@@ -46,7 +46,8 @@ class Reminder::Addition
   end
 
   def time_understood
-    errors.add(:time, "isn't a time the app understands") unless remind_at
+    # Worded like the list of reminders whose time couldn't be understood.
+    errors.add(:base, "Needs a clearer time. Couldn't understand “#{directive}”.") unless remind_at
   end
 
   def note_chosen

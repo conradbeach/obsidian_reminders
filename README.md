@@ -133,7 +133,7 @@ curl -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
 ```
 
 Responds `201 Created` with the reminder, shaped as above, or
-`422 Unprocessable Content` with `{"errors": ["When isn't a time the app understands"]}`.
+`422 Unprocessable Content` with `{"errors": ["Needs a clearer time. Couldn't understand “whenever”."]}`.
 
 ### `POST /reminders/:id/completion.json`
 

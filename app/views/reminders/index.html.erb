@@ -64,7 +64,8 @@
             class: "mt-4 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm",
             data: { new_reminder_target: "form", morph_preserve: "hidden", action: "turbo:submit-end->new-reminder#submitted" } do |form| %>
         <% if @addition.errors.any? %>
-          <ul class="mb-3 text-sm font-medium text-red-700 dark:text-red-300">
+          <ul class="mb-3 text-sm font-medium text-red-700 dark:text-red-300" data-new-reminder-target="errors"
+            data-morph-keep>
             <% @addition.errors.full_messages.each do |message| %><li><%= message %></li><% end %>
           </ul>
         <% end %>

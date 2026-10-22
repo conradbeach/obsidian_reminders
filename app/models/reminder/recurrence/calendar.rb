@@ -37,6 +37,11 @@ class Reminder::Recurrence::Calendar
     parts.map { it.match?(BARE_ORDINAL) ? "#{it}#{weekday}" : it }
   end
 
+  # A day of the month, as a date test: "the 1st", "the third sunday".
+  def self.day_of_month(body)
+    monthly_dates(body) || nth_weekday(body)
+  end
+
   def self.rule(body)
     weekdays(body) || yearly_dates(body) || monthly_dates(body) || nth_weekday(body)
   end

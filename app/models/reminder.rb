@@ -25,14 +25,15 @@ class Reminder < ApplicationRecord
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
   # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted once they've been missing
   # for the grace period. A reminder whose line is now under a different heading, or whose notes changed, keeps its
-  # time.
+  # time. One whose time couldn't be understood is read again each time, so it's scheduled, relative to then, once the
+  # parser learns its wording.
   def self.sync(vault)
     unmatched = all.index_by { it.slice(*IDENTITY).symbolize_keys }
 
     transaction do
       vault.reminders.each do |attributes|
-        reminder = unmatched.delete(attributes.slice(*IDENTITY)) || first_seen(attributes)
-        reminder.update!(**attributes.slice(:heading, :notes), missing_since: nil)
+        identity = attributes.slice(*IDENTITY)
+        (unmatched.delete(identity) || new(identity)).found_in_vault(attributes)
       end
       mark_missing(unmatched.values)
     end
@@ -44,13 +45,14 @@ class Reminder < ApplicationRecord
   end
   private_class_method :mark_missing
 
-  def self.first_seen(attributes)
-    new(attributes.slice(*IDENTITY).merge(remind_at: Directive.new(attributes[:directive]).time))
-  end
-  private_class_method :first_seen
-
   def self.notify_due
     due.find_each(&:notify)
+  end
+
+  # Schedules the reminder if it has no time yet, and keeps its heading and notes current.
+  def found_in_vault(attributes)
+    self.remind_at ||= Directive.new(directive).time
+    update!(**attributes.slice(:heading, :notes), missing_since: nil)
   end
 
   # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder is hidden at

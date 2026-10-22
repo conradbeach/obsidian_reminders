@@ -1,33 +1,41 @@
 # Dates fixed by the calendar: weekdays ("every monday and thursday", "every weekday"), dates each year ("every
 # year on october 1", "every april 19", "every sep 1, dec 1, mar 1 and jun 1") or month ("every month on the
-# 15th"), or the nth weekday of a month or of every month ("every last saturday in october", "every 2nd tue"). Done
-# moves to the next scheduled date.
+# 15th"), or the nth weekday of a month or of every month ("every last saturday in october", "every 2nd tue"), or any
+# of these joined with "and" ("every 2nd saturday in november and 2nd saturday in may"). Done moves to the next
+# scheduled date.
 class Reminder::Recurrence::Calendar
   ORDINAL = /(?<nth>1st|2nd|3rd|4th|5th|first|second|third|fourth|fifth|last)/
   ORDINALS = { "1st" => 1, "first" => 1, "2nd" => 2, "second" => 2, "3rd" => 3, "third" => 3, "4th" => 4,
                "fourth" => 4, "5th" => 5, "fifth" => 5, "last" => :last }.freeze
   DAY_OF_MONTH = /\A(?<day>\d{1,2})(?:st|nd|rd|th)?\z/
-  MONTHLY_DATE = /\A(?:month\s+on\s+)?(?:the\s+)?(?<day>\d{1,2})(?:st|nd|rd|th)\z/
+  MONTHLY_DATE = /\A(?<day>\d{1,2})(?:st|nd|rd|th)\z/
   IN_MONTH = /(?:\s+(?:of|in)\s+(?<month>[a-z]+))?/
   NTH_WEEKDAY = /\A(?:(?:year|month)\s+on\s+)?(?:the\s+)?#{ORDINAL}\s+(?<day>[a-z]+)#{IN_MONTH}\z/
   # Far enough ahead to find the next February 29th.
   SEARCH_DAYS = 366 * 8
 
+  # A date is on the schedule if any of the rules joined with "and" puts it there.
   def self.parse(body, clock:, anchor:)
-    rule = weekdays(body) || yearly_dates(body) || monthly_date(body) || nth_weekday(body) or return
-    new(clock:, anchor:, rule:)
+    rules = body.split(/\s+and\s+|\s*&\s*/).map { rule(it) }
+    return unless rules.any? && rules.none?(nil)
+
+    new(clock:, anchor:, rule: ->(date) { rules.any? { |rule| rule.call(date) } })
+  end
+
+  def self.rule(body)
+    weekdays(body) || yearly_dates(body) || monthly_dates(body) || nth_weekday(body)
   end
 
   def self.weekdays(body)
     return ->(date) { date.on_weekday? } if body == "weekday"
 
-    days = (body.split(/\s+|&/) - ["", "and"]).map { Reminder::Recurrence.weekday(it) }
+    days = body.split.map { Reminder::Recurrence.weekday(it) }
     ->(date) { days.include?(date.wday) } if days.any? && days.none?(nil)
   end
 
   # One or more month-and-day pairs, in either order ("april 19", "the 1st of september").
   def self.yearly_dates(body)
-    words = body.delete_prefix("year on ").tr("&", " ").split - ["and", "the", "of"]
+    words = body.delete_prefix("year on ").split - ["the", "of"]
     return unless words.any? && words.size.even?
 
     dates = words.each_slice(2).map { |pair| month_and_day(*pair) }
@@ -41,10 +49,10 @@ class Reminder::Recurrence::Calendar
     [month, day] if month && day && Date.valid_date?(2028, month, day)
   end
 
-  def self.monthly_date(body)
-    match = MONTHLY_DATE.match(body) or return
-    day = match[:day].to_i
-    ->(date) { date.day == day } if day.between?(1, 31)
+  # One or more days of the month ("the 15th", "1st 15th").
+  def self.monthly_dates(body)
+    days = (body.delete_prefix("month on ").split - ["the"]).map { MONTHLY_DATE.match(it)&.[](:day)&.to_i }
+    ->(date) { days.include?(date.day) } if days.any? && days.all? { it&.between?(1, 31) }
   end
 
   def self.nth_weekday(body)
@@ -61,7 +69,7 @@ class Reminder::Recurrence::Calendar
   def self.nth_of_month?(date, nth)
     nth == :last ? date + 7 > date.end_of_month : (date.day - 1) / 7 == nth - 1
   end
-  private_class_method :weekdays, :yearly_dates, :month_and_day, :monthly_date, :nth_weekday, :nth_weekday_rule,
+  private_class_method :rule, :weekdays, :yearly_dates, :month_and_day, :monthly_dates, :nth_weekday, :nth_weekday_rule,
     :nth_of_month?
 
   def initialize(clock:, anchor:, rule:)

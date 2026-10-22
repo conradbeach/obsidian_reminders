@@ -95,6 +95,15 @@ RSpec.describe Reminder::Directive do
       end
     end
 
+    context "when a repeating directive joins calendar rules with \"and\"" do
+      it "returns the next date any of them schedules" do
+        expect(time_for("every 2nd Saturday in November and 2nd Saturday in May"))
+          .to eq(Time.zone.parse("2026-11-14 09:00"))
+        expect(time_for("every 1st and 15th at 8am")).to eq(Time.zone.parse("2026-11-01 08:00"))
+        expect(time_for("every 1st, 15th and 20th")).to eq(Time.zone.parse("2026-10-20 09:00"))
+      end
+    end
+
     context "when a repeating directive lists dates each year" do
       it "returns the next of those dates" do
         expect(time_for("every 1st of september")).to eq(Time.zone.parse("2027-09-01 09:00"))

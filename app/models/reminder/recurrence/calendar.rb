@@ -11,15 +11,27 @@ class Reminder::Recurrence::Calendar
   MONTHLY_DATE = /\A(?<day>\d{1,2})(?:st|nd|rd|th)\z/
   IN_MONTH = /(?:\s+(?:of|in)\s+(?<month>[a-z]+))?/
   NTH_WEEKDAY = /\A(?:(?:year|month)\s+on\s+)?(?:the\s+)?#{ORDINAL}\s+(?<day>[a-z]+)#{IN_MONTH}\z/
+  BARE_ORDINAL = /\A(?:(?:year|month)\s+on\s+)?(?:the\s+)?#{ORDINAL}\z/
+  UP_TO_ORDINAL = /\A.*?#{ORDINAL}/
   # Far enough ahead to find the next February 29th.
   SEARCH_DAYS = 366 * 8
 
   # A date is on the schedule if any of the rules joined with "and" puts it there.
   def self.parse(body, clock:, anchor:)
-    rules = body.split(/\s+and\s+|\s*&\s*/).map { rule(it) }
+    rules = parts(body).map { rule(it) }
     return unless rules.any? && rules.none?(nil)
 
     new(clock:, anchor:, rule: ->(date) { rules.any? { |rule| rule.call(date) } })
+  end
+
+  # The rules joined with "and". Ordinals before an nth weekday share its weekday: "2nd and 4th monday" is the 2nd
+  # monday and the 4th monday, not the 2nd of the month and the 4th monday.
+  def self.parts(body)
+    parts = body.split(/\s+and\s+|\s*&\s*/)
+    return parts unless parts.last&.match?(NTH_WEEKDAY)
+
+    weekday = parts.last.sub(UP_TO_ORDINAL, "")
+    parts.map { it.match?(BARE_ORDINAL) ? "#{it}#{weekday}" : it }
   end
 
   def self.rule(body)
@@ -69,8 +81,8 @@ class Reminder::Recurrence::Calendar
   def self.nth_of_month?(date, nth)
     nth == :last ? date + 7 > date.end_of_month : (date.day - 1) / 7 == nth - 1
   end
-  private_class_method :rule, :weekdays, :yearly_dates, :month_and_day, :monthly_dates, :nth_weekday, :nth_weekday_rule,
-    :nth_of_month?
+  private_class_method :parts, :rule, :weekdays, :yearly_dates, :month_and_day, :monthly_dates, :nth_weekday,
+    :nth_weekday_rule, :nth_of_month?
 
   def initialize(clock:, anchor:, rule:)
     @clock = clock

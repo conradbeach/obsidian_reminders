@@ -73,6 +73,21 @@ RSpec.describe Reminder::Recurrence do
           .to eq(Time.zone.parse("2027-05-08 09:00"))
       end
 
+      it "gives ordinals joined with \"and\" the weekday that follows them" do
+        meetings = recurrence("every 2nd and 4th Monday at 7pm")
+        fourth_monday = Time.zone.parse("2026-10-26 19:00")
+
+        expect(meetings.next_time(occurrence: fourth_monday, done_at: fourth_monday))
+          .to eq(Time.zone.parse("2026-11-09 19:00"))
+      end
+
+      it "keeps days of the month joined with \"and\" as days of the month" do
+        bills = recurrence("every 1st and 15th")
+        first = Time.zone.parse("2026-11-01 09:00")
+
+        expect(bills.next_time(occurrence: first, done_at: first)).to eq(Time.zone.parse("2026-11-15 09:00"))
+      end
+
       it "moves through a list of dates each year, whenever each is done" do
         quarterly = recurrence("every September 1st, December 1st, March 1st and June 1st")
         december = Time.zone.parse("2026-12-01 09:00")

@@ -35,7 +35,7 @@ Water the plants (@friday 6pm)
     `(@every month on the 15th)`, `(@every 2nd tue)`,
     `(@every last saturday in october)`, `(@every 3rd sat of sep)`
   - any of those joined with "and": `(@every 1st and 15th)`,
-    `(@every 2nd saturday in november and 2nd saturday in may)`
+    `(@every 2nd and 4th monday)`, `(@every 2nd saturday in november and 2nd saturday in may)`
 
   Adding `from <date>` (`(@every 6 months from 2027-03-01)`) makes that date the
   first occurrence; otherwise it's the next one that hasn't passed. A repeating

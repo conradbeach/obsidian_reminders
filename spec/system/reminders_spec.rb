@@ -82,4 +82,37 @@ RSpec.describe "Reminders" do
       Rails.configuration.x.vault_path = original_path
     end
   end
+
+  it "keeps an error and what was typed as the list refreshes, and clears both once a reminder is added" do
+    user = create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
+    visit root_path
+    sign_in_as(user)
+    original_path = Rails.configuration.x.vault_path
+
+    Dir.mktmpdir do |dir|
+      Rails.configuration.x.vault_path = dir
+      click_on "New reminder"
+      fill_in "Reminder", with: "Call the dentist"
+      fill_in "When", with: "someday"
+      click_on "Add"
+      expect(page).to have_content("Needs a clearer time. Couldn't understand “someday”.")
+
+      create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
+      page.execute_script("document.dispatchEvent(new Event('visibilitychange'))")
+      expect(page).to have_content("Pick up dry cleaning")
+      expect(page).to have_content("Couldn't understand “someday”")
+      expect(page).to have_field("Reminder", with: "Call the dentist")
+      expect(page).to have_field("When", with: "someday")
+
+      fill_in "When", with: "tomorrow 9am"
+      click_on "Add"
+      expect(page).to have_css("#upcoming-reminders", text: "Call the dentist")
+      click_on "New reminder"
+      expect(page).to have_field("Reminder", with: "")
+      expect(page).to have_field("When", with: "")
+      expect(page).to have_no_content("Couldn't understand")
+    ensure
+      Rails.configuration.x.vault_path = original_path
+    end
+  end
 end

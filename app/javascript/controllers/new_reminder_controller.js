@@ -2,7 +2,7 @@ import { Controller } from "@hotwired/stimulus"
 
 // The new reminder form, hidden until the + button opens it, and cleared and hidden again once a reminder is added.
 export default class extends Controller {
-  static targets = ["button", "form", "text"]
+  static targets = ["button", "form", "text", "errors"]
 
   toggle() {
     this.#show(this.formTarget.hidden)
@@ -13,6 +13,7 @@ export default class extends Controller {
     if (!success) return
 
     this.formTarget.reset()
+    if (this.hasErrorsTarget) this.errorsTarget.remove()
     this.#show(false)
   }
 

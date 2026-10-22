@@ -33,7 +33,8 @@ Water the plants (@friday 6pm)
   - dates: `(@every year on october 1)`, `(@every april 19)`,
     `(@every sep 1, dec 1, mar 1 and jun 1)`,
     `(@every month on the 15th)`, `(@every 2nd tue)`,
-    `(@every last saturday in october)`, `(@every 3rd sat of sep)`
+    `(@every last saturday in october)`, `(@every 3rd sat of sep)`,
+    `(@every 3rd saturday in january, march, june, august and november)`
   - any of those joined with "and": `(@every 1st and 15th)`,
     `(@every 2nd and 4th monday)`, `(@every 2nd saturday in november and 2nd saturday in may)`
 

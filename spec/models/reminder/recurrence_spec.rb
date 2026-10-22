@@ -81,6 +81,13 @@ RSpec.describe Reminder::Recurrence do
           .to eq(Time.zone.parse("2026-11-09 19:00"))
       end
 
+      it "moves through an nth weekday in a list of months" do
+        club = recurrence("every 3rd Saturday in January, March, June, August and November")
+        november = Time.zone.parse("2026-11-21 09:00")
+
+        expect(club.next_time(occurrence: november, done_at: november)).to eq(Time.zone.parse("2027-01-16 09:00"))
+      end
+
       it "keeps days of the month joined with \"and\" as days of the month" do
         bills = recurrence("every 1st and 15th")
         first = Time.zone.parse("2026-11-01 09:00")

@@ -4,7 +4,7 @@ module Reminder::Recurrence
   # nil if the rule isn't one we recognize. The anchor, from "... from <date>", is the date of the first occurrence.
   def self.parse(rule, clock, anchor: nil)
     body = rule.delete_prefix("every").strip
-    [Interval, WeeklyInterval, Calendar].lazy.filter_map { it.parse(body, clock:, anchor:) }.first
+    [Interval, WeeklyInterval, MonthlyInterval, Calendar].lazy.filter_map { it.parse(body, clock:, anchor:) }.first
   end
 
   def self.count(text)

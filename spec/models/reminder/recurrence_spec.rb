@@ -57,6 +57,25 @@ RSpec.describe Reminder::Recurrence do
       end
     end
 
+    context "when it repeats every few months on a day of the month" do
+      it "keeps to that day every so many months, however late it was done" do
+        potluck = recurrence("every 3 months on the third Sunday")
+        november = Time.zone.parse("2026-11-15 09:00")
+
+        expect(potluck.next_time(occurrence: november, done_at: november + 1.day))
+          .to eq(Time.zone.parse("2027-02-21 09:00"))
+        expect(potluck.next_time(occurrence: november, done_at: november + 4.months))
+          .to eq(Time.zone.parse("2027-05-16 09:00"))
+      end
+
+      it "skips a month without that day" do
+        rent = recurrence("every 3 months on the 31st")
+        january = Time.zone.parse("2027-01-31 09:00")
+
+        expect(rent.next_time(occurrence: january, done_at: january)).to eq(Time.zone.parse("2027-07-31 09:00"))
+      end
+    end
+
     context "when it's fixed to the calendar" do
       it "returns the next scheduled date" do
         halloween_party = recurrence("every year on the last saturday in october")

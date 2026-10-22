@@ -112,6 +112,13 @@ RSpec.describe Reminder::Directive do
       end
     end
 
+    context "when a repeating directive is every few months on a day of the month" do
+      it "returns the next such day" do
+        expect(time_for("every 3 months on the third Sunday")).to eq(Time.zone.parse("2026-11-15 09:00"))
+        expect(time_for("every 2 months on the 1st")).to eq(Time.zone.parse("2026-11-01 09:00"))
+      end
+    end
+
     context "when a repeating directive lists dates each year" do
       it "returns the next of those dates" do
         expect(time_for("every 1st of september")).to eq(Time.zone.parse("2027-09-01 09:00"))

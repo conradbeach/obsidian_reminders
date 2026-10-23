@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     resource :completion, only: :create, module: :reminders
   end
   resource :settings, only: [:show, :update]
+  resource :guide, only: :show
   resource :reminder_filter, only: :update
   resource :api_token, only: :create
   mount MissionControl::Jobs::Engine, at: "/jobs"

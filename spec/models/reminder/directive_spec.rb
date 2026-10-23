@@ -136,6 +136,13 @@ RSpec.describe Reminder::Directive do
       end
     end
 
+    context "when a repeating directive's starting date is a weekday followed by a time" do
+      it "starts on that weekday at that time" do
+        expect(time_for("every day from Tuesday")).to eq(Time.zone.parse("2026-10-20 09:00"))
+        expect(time_for("every day from next monday at 8am")).to eq(Time.zone.parse("2026-10-26 08:00"))
+      end
+    end
+
     context "when a repeating directive isn't recognized" do
       it "returns nil" do
         expect(time_for("every blue moon")).to be_nil

@@ -45,15 +45,22 @@ class Reminder::Directive
   def recurrence
     return unless recurring?
 
-    rule, anchor_text = @text.split(/\s+(?:from|starting)\s+/, 2)
-    anchor = anchor_text && self.class.new(anchor_text, now: @now).time&.to_date
-    return if anchor_text && !anchor
+    rule, start = @text.split(/\s+(?:from|starting)\s+/, 2)
+    anchor, anchor_clock = start ? starting(start) : []
+    return if start && !anchor
 
     rule, clock = Reminder::Clock.split(rule)
-    Reminder::Recurrence.parse(rule, clock || [DATE_ONLY_HOUR, 0], anchor:)
+    Reminder::Recurrence.parse(rule, clock || anchor_clock || [DATE_ONLY_HOUR, 0], anchor:)
   end
 
   private
+
+  # The starting date, and the time of day if it follows the date rather than the rule: "every day from monday at
+  # 8am" as well as "every day at 8am from monday".
+  def starting(text)
+    date_text, clock = Reminder::Clock.split(text)
+    [self.class.new(date_text, now: @now).time&.to_date, clock]
+  end
 
   def date_and_clock_time
     date_text, clock = Reminder::Clock.split(@text)
@@ -75,7 +82,7 @@ class Reminder::Directive
 
   def duration_from_now
     match = DURATION.match(@text)
-    count = count(match[:count]) or return
+    count = self.class.count(match[:count]) or return
     @now.change(sec: 0) + (match[:unit].start_with?("h") ? count.hours : count.minutes)
   end
 
@@ -94,7 +101,7 @@ class Reminder::Directive
   end
 
   def date_offset(today, match)
-    count = count(match[:count]) or return
+    count = self.class.count(match[:count]) or return
     [today.advance(match[:unit].pluralize.to_sym => count)]
   end
 
@@ -127,9 +134,5 @@ class Reminder::Directive
 
   def month(text)
     Integer(text, 10, exception: false) || MONTHS.index { it.start_with?(text) }&.succ
-  end
-
-  def count(text)
-    self.class.count(text)
   end
 end

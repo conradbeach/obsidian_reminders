@@ -194,6 +194,25 @@ them; the recurring job only runs in production.
 (model, request, job, and Playwright system specs). GitHub Actions runs the same
 checks.
 
+### The parser
+
+Reading directives (`app/models/reminder/directive.rb`, `clock.rb`,
+`calendar_date.rb`, and `recurrence/`) is the most intricate part of the app,
+and a misread is the worst failure it has: a reminder that goes off on the wrong
+day looks fine, and nothing says it's wrong. So the parser's specs are tables of
+directives and the dates they mean, worked out by hand from a calendar rather
+than copied from the parser's output:
+
+- `spec/models/reminder/directive_spec.rb`: when each directive first goes off,
+  including near misses that must stay unscheduled.
+- `spec/models/reminder/recurrence_spec.rb`: the next occurrence from a given one,
+  and each kind of repeat's first six occurrences, done on time and late.
+
+Every change to the parser adds rows for what it reads, its wording variants,
+its calendar edges (daylight saving, leap days, short months, year rollover),
+and what it must not read. When a row disagrees with the parser, check the
+calendar before changing the row.
+
 ### Keeping dependencies up to date
 
 Nothing updates dependencies automatically, and CI's security audit only runs

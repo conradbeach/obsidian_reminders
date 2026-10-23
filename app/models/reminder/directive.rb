@@ -18,9 +18,12 @@ class Reminder::Directive
     Integer(text, 10, exception: false) || COUNTS[text]
   end
 
-  def initialize(text, now: Time.current)
+  # starts_on is the day a stored repeating reminder started on, which a repeat without a starting date of its own
+  # keeps to.
+  def initialize(text, now: Time.current, starts_on: nil)
     @text = text.downcase.gsub(/(?<![a-z])([ap])\.m\.?/, '\1m').tr(",", " ").squish
     @now = now
+    @starts_on = starts_on
   end
 
   # Times found for the first time are relative to now. A time of day without a date is the next one, so "9am" in
@@ -48,7 +51,7 @@ class Reminder::Directive
   private
 
   def repeat
-    @repeat ||= Repeat.new(@text, now: @now) if recurring?
+    @repeat ||= Repeat.new(@text, now: @now, starts_on: @starts_on) if recurring?
   end
 
   def date_and_clock_time

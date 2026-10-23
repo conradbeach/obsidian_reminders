@@ -67,15 +67,16 @@ class Reminder < ApplicationRecord
     end
   end
 
-  # Its time and, if it repeats until a date, that date, both read from the directive relative to now.
+  # Its time and, if it repeats, the day it starts on and any day it ends on, read from the directive relative to now.
   def schedule
     directive = Directive.new(self.directive)
     self.remind_at = directive.time
+    self.starts_on = remind_at.to_date if remind_at && directive.recurrence
     self.ends_on = directive.ends_on
   end
 
   def recurrence
-    @recurrence ||= Directive.new(directive).recurrence
+    @recurrence ||= Directive.new(directive, starts_on:).recurrence
   end
 
   def check_off_in_vault

@@ -50,8 +50,9 @@ Water the plants (@friday 6pm)
   day of that window, every year. A repeating
   reminder notifies once per occurrence and stays (eventually Overdue)
   until it's marked done in the app, which moves it to its next occurrence:
-  intervals count from the day it was done; everything else moves to its next
-  scheduled date. Checking its line off in Obsidian, or removing it, ends it for
+  intervals count from the day it was done (months and years keep to the day they
+  started on, so one started January 31st comes due February 28th, then March
+  31st); everything else moves to its next scheduled date. Checking its line off in Obsidian, or removing it, ends it for
   good.
 - Relative times are measured from when the app first sees the reminder, about
   a minute after the note syncs. Once seen, a reminder keeps its time even if the

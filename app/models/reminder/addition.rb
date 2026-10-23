@@ -1,5 +1,5 @@
-# A reminder added in the app, which goes at the end of the user's note for new reminders as a task:
-# "- [ ] Call the dentist (@tomorrow 9am)".
+# A reminder added in the app, which goes at the end of the user's note for new reminders as a task with its block ID:
+# "- [ ] Call the dentist (@tomorrow 9am) ^K3P9".
 class Reminder::Addition
   include ActiveModel::Model
   include ActiveModel::Attributes
@@ -21,7 +21,7 @@ class Reminder::Addition
     return unless valid?
 
     Vault.synced.append(note_path:, line:)
-    Reminder.create_or_find_by!(note_path:, line:, directive:) { it.remind_at = remind_at }
+    Reminder.new(note_path:, line:, directive:, block_id:).tap(&:schedule).tap(&:save!)
   rescue Vault::Busy
     errors.add(:base, "The vault is busy syncing. Try again in a moment.")
     nil
@@ -34,7 +34,11 @@ class Reminder::Addition
   end
 
   def line
-    "- [ ] #{text.squish} (@#{directive})"
+    "- [ ] #{text.squish} (@#{directive}) ^#{block_id}"
+  end
+
+  def block_id
+    @block_id ||= Reminder.new_block_id
   end
 
   def directive

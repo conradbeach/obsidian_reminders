@@ -78,11 +78,20 @@ to its next occurrence; any other is checked off in its note. Responds
   silently stopped receiving changes). Its sync state lives in the vault volume
   (`/vault/.ob-state`), so the two can't be lost separately: state outliving a
   wiped vault would look like every note being deleted.
-- The only change the app makes to notes is checking off a reminder's line
-  (`CheckOffReminderJob`, `Vault#check_off`). It edits only a line that appears
-  exactly once, unchanged since the last scan; replaces the note in one step;
+- The app changes notes in three ways: it adds reminders made in the app to
+  the user's note (`Vault#append`), checks off a reminder's line
+  (`CheckOffReminderJob`, `Vault#check_off`), and ends a new reminder's line
+  with an Obsidian block ID (`IdentifyReminderJob`, `Vault#identify`). It edits
+  only a line unchanged since the last scan; replaces the note in one step;
   and holds a lock (`/vault/.reminders.lock`) that each sync also holds, so it
   never edits a note mid-sync. If the lock is busy it retries.
+- A reminder is matched to its line by the line's block ID (`^K3P9`), so its
+  words can change, or it can move to another note, and keep its time; a
+  changed directive is read again. A line without an ID of its own (a new one,
+  one with several directives, or a copy of another reminder's line, which
+  gets a new ID) is matched by its note, line, and directive. The ID is added
+  two minutes after a reminder is found, so it doesn't land in a line someone's
+  still typing.
 - `CheckRemindersJob` runs every minute (Solid Queue recurring task). It scans
   every Markdown file in the vault for directives (`Vault`), stores new ones as
   `Reminder`s and deletes ones that are gone (`Reminder.sync`), then sends push

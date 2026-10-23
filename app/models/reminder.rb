@@ -1,4 +1,6 @@
 class Reminder < ApplicationRecord
+  include Identifiable
+
   # Undelivered reminders are retried for this long. Reminders first found already this far past are never sent,
   # so editing an old note doesn't notify about it again.
   DELIVERY_WINDOW = 1.hour
@@ -7,8 +9,6 @@ class Reminder < ApplicationRecord
   MISSING_GRACE_PERIOD = 5.minutes
   # How long marking a reminder done can be undone. Its note isn't checked off until then.
   UNDO_PERIOD = 10.seconds
-  # A reminder is the same reminder as long as its note, line, and directive are unchanged.
-  IDENTITY = [:note_path, :line, :directive].freeze
   LIST_MARKER = /\A(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?/
 
   scope :in_vault, -> { where(missing_since: nil) }
@@ -28,20 +28,18 @@ class Reminder < ApplicationRecord
   }
   scope :due, -> { in_vault.incomplete.where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
 
-  # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now
-  # ("tomorrow 9am"); reminders whose directive is gone, edited, or checked off are deleted once they've been missing
-  # for the grace period. A reminder whose line is now under a different heading, or whose notes changed, keeps its
-  # time. One whose time couldn't be understood is read again each time, so it's scheduled, relative to then, once the
-  # parser learns its wording.
+  # Matches reminders to the vault's directives (see Matcher). Directives found for the first time are scheduled
+  # relative to now ("tomorrow 9am"); reminders whose directive is gone or checked off are deleted once they've been
+  # missing for the grace period.
   def self.sync(vault)
-    unmatched = all.index_by { it.slice(*IDENTITY).symbolize_keys }
+    matcher = Matcher.new(all.to_a)
 
     transaction do
       vault.reminders.each do |attributes|
-        identity = attributes.slice(*IDENTITY)
-        (unmatched.delete(identity) || new(identity)).found_in_vault(attributes)
+        reminder, attributes = matcher.match(attributes)
+        reminder.found_in_vault(attributes)
       end
-      mark_missing(unmatched.values)
+      mark_missing(matcher.unmatched)
     end
   end
 
@@ -55,10 +53,17 @@ class Reminder < ApplicationRecord
     due.find_each(&:notify)
   end
 
-  # Schedules the reminder if it has no time yet, and keeps its heading and notes current.
+  # Takes on the line's current attributes. Its time is read, relative to now, when it's new, when its directive was
+  # edited (which only its block ID lets it be followed through), and, until it's understood, each time, so it's
+  # scheduled once the parser learns its wording. A new reminder gets a block ID of its own if its line can have one.
   def found_in_vault(attributes)
-    schedule unless remind_at
-    update!(**attributes.slice(:heading, :notes), missing_since: nil)
+    assign_attributes(**attributes, missing_since: nil)
+    if directive_changed? || !remind_at
+      self.notified_at = nil
+      schedule
+    end
+    save!
+    identify_later if previously_new_record? && identifiable?
   end
 
   # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder, or a
@@ -113,9 +118,9 @@ class Reminder < ApplicationRecord
     { id:, text:, remind_at:, recurring: recurrence.present?, note_path:, heading:, notes: }
   end
 
-  # The line without its list marker, checkbox, or directives.
+  # The line without its list marker, checkbox, directives, or block ID.
   def text
-    line.sub(LIST_MARKER, "").gsub(Vault::DIRECTIVE, "").squish.presence || note_name
+    line.sub(LIST_MARKER, "").sub(Vault::BLOCK_ID, "").gsub(Vault::DIRECTIVE, "").squish.presence || note_name
   end
 
   def note_name

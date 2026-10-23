@@ -11,7 +11,7 @@
   </p>
   <p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
     Without a time, a reminder goes off at 9am. Anything the app can't read is listed under “Needs a clearer time”
-    rather than guessed. Editing a reminder's line reads its time again from that moment.
+    rather than guessed. Changing a reminder's time reads it again from that moment.
   </p>
 </section>
 
@@ -66,8 +66,13 @@
       Reminders belong to whoever's folders, chosen in Settings, hold the note. A folder you both choose is shared.
     </li>
     <li>
-      A time is read once, about a minute after the note syncs: “tomorrow” keeps meaning that tomorrow. Editing the
-      line reads it again, so fixing a typo a day later in a “tomorrow” reminder means changing it to “today” too.
+      A time is read once, about a minute after the note syncs: “tomorrow” keeps meaning that tomorrow, until you
+      change it.
+    </li>
+    <li>
+      A couple of minutes after a reminder is found, the app ends its line with an ID like <code>^K3P9</code>, so you
+      can reword the reminder or move it to another note without its time being read again. Until then, or on a line
+      with more than one reminder, editing anything on the line reads the time again.
     </li>
     <li>Each reminder notifies each of your devices once.</li>
     <li>

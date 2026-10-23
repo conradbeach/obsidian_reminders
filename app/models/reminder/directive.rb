@@ -25,7 +25,7 @@ class Reminder::Directive
   end
 
   def initialize(text, now: Time.current)
-    @text = text.downcase.gsub(/\b([ap])\.m\.?/, '\1m').tr(",", " ").squish
+    @text = text.downcase.gsub(/(?<![a-z])([ap])\.m\.?/, '\1m').tr(",", " ").squish
     @now = now
   end
 

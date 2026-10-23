@@ -112,6 +112,43 @@ RSpec.describe "Reminders" do
       expect(response.parsed_body.css("#unscheduled-reminders").text).to include("Couldn't understand “whenever”")
     end
 
+    context "when searching" do
+      it "lists the reminders whose text or notes match, even ones after today when showing only today" do
+        sign_in create(:user, note_folders: ["Tabitha"], show_today_only: true)
+        create(:reminder, line: "Call the dentist (@tomorrow 9am)", remind_at: 1.day.from_now)
+        create(:reminder, line: "Pick up dry cleaning (@monday)", remind_at: 3.days.from_now, notes: "Ask the dentist")
+        create(:reminder, line: "Water the plants (@8pm)", remind_at: 1.hour.from_now)
+
+        get root_path(q: "Dentist")
+
+        expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text))
+          .to eq(["Call the dentist", "Pick up dry cleaning"])
+        expect(response.parsed_body.at_css("#reminder-search input")["value"]).to eq("Dentist")
+      end
+
+      it "narrows overdue reminders and ones that need a clearer time too" do
+        sign_in create(:user, note_folders: ["Tabitha"])
+        create(:reminder, line: "Pay rent (@Oct 1)", remind_at: 3.days.ago)
+        create(:reminder, line: "Renew the passport (@Oct 1)", remind_at: 3.days.ago)
+        create(:reminder, line: "Pay the plumber (@someday)", directive: "someday", remind_at: nil)
+        create(:reminder, line: "Call the plumber (@someday)", directive: "someday", remind_at: nil)
+
+        get root_path(q: "pay")
+
+        expect(response.parsed_body.css("#overdue-reminders li p.font-medium").map(&:text)).to eq(["Pay rent"])
+        expect(response.parsed_body.css("#unscheduled-reminders li p.font-medium").map(&:text))
+          .to eq(["Pay the plumber"])
+      end
+
+      it "says when nothing matches" do
+        sign_in create(:user, note_folders: ["Tabitha"], show_today_only: true)
+
+        get root_path(q: "dentist")
+
+        expect(response.parsed_body.at_css("#upcoming-reminders").text.strip).to eq("No reminders match “dentist”.")
+      end
+    end
+
     context "when the user hasn't chosen any folders" do
       it "asks them to choose folders" do
         sign_in create(:user, note_folders: [])

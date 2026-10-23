@@ -22,6 +22,10 @@ class Reminder < ApplicationRecord
     conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }
     conditions.any? ? where(conditions.reduce(:or)) : none
   }
+  # All of them when there's no query.
+  scope :matching, lambda { |query|
+    where("line LIKE :query OR notes LIKE :query", query: "%#{sanitize_sql_like(query)}%") if query
+  }
   scope :due, -> { in_vault.incomplete.where(notified_at: nil, remind_at: DELIVERY_WINDOW.ago..Time.current) }
 
   # Matches reminders to the vault's directives. Directives found for the first time are scheduled relative to now

@@ -41,7 +41,13 @@ Water the plants (@friday 6pm)
     `(@every 2nd and 4th monday)`, `(@every 2nd saturday in november and 2nd saturday in may)`
 
   Adding `from <date>` (`(@every 6 months from 2027-03-01)`) makes that date the
-  first occurrence; otherwise it's the next one that hasn't passed. A repeating
+  first occurrence; otherwise it's the next one that hasn't passed. A repeat can
+  end: `(@every day until friday)`, `(@every day from december 1 to december 12)`,
+  or `(@every 3 days for 3 weeks)`. Ends include their last day, a length counts
+  from the first occurrence, and relative ends ("friday") are read once, when the
+  app first sees the reminder. Marking the last occurrence done checks it off in
+  the note. `(@every year from september 1 to september 7)` is different: every
+  day of that window, every year. A repeating
   reminder notifies once per occurrence and stays (eventually Overdue)
   until it's marked done in the app, which moves it to its next occurrence:
   intervals count from the day it was done; everything else moves to its next

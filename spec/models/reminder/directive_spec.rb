@@ -21,6 +21,62 @@ RSpec.describe Reminder::Directive do
     end
   end
 
+  def self.ends(form, rows)
+    context "when the directive is #{form}" do
+      rows.each do |text, first, last|
+        it "reads “#{text}” as starting #{first || 'never'} and ending #{last || 'never'}" do
+          directive = described_class.new(text, now:)
+
+          expect([directive.time, directive.ends_on]).to eq([first && Time.zone.parse(first), last&.to_date])
+        end
+      end
+    end
+  end
+
+  describe "#ends_on" do
+    ends "a repeat until a date, which includes that date", [
+      ["every day until Tuesday", "2026-10-20 09:00", "2026-10-20"],
+      ["every day until Friday", "2026-10-20 09:00", "2026-10-23"],
+      ["every day until October 31", "2026-10-20 09:00", "2026-10-31"],
+      ["every day at 8am until friday", "2026-10-20 08:00", "2026-10-23"],
+      ["every day until friday at 8pm", "2026-10-19 20:00", "2026-10-23"],
+    ]
+
+    ends "a repeat from one date to another, the end read from the start", [
+      ["every day from Wednesday to Friday", "2026-10-21 09:00", "2026-10-23"],
+      ["every day from December 1 to December 12", "2026-12-01 09:00", "2026-12-12"],
+      ["every other day from Monday to Friday", "2026-10-26 09:00", "2026-10-30"],
+      ["every day from friday until monday", "2026-10-23 09:00", "2026-10-26"],
+      ["every day from monday to monday", "2026-10-26 09:00", "2026-10-26"],
+    ]
+
+    ends "a repeat for a length of time, counted from its first occurrence", [
+      ["every day for 1 week", "2026-10-20 09:00", "2026-10-26"],
+      ["every week for 2 months", "2026-10-20 09:00", "2026-12-19"],
+      ["every 3 days for 3 weeks", "2026-10-20 09:00", "2026-11-09"],
+      ["every day for two days", "2026-10-20 09:00", "2026-10-21"],
+      ["every monday for a month", "2026-10-26 09:00", "2026-11-25"],
+    ]
+
+    ends "a window of days every year, which doesn't end", [
+      ["every year from September 1 to September 7", "2027-09-01 09:00", nil],
+      ["every year from dec 30 to jan 2 at 8pm", "2026-12-30 20:00", nil],
+    ]
+
+    ends "a repeat without an end", [
+      ["every monday", "2026-10-26 09:00", nil],
+      ["every year from march 1", "2027-03-01 09:00", nil],
+    ]
+
+    ends "an end or length that isn't understood", [
+      ["every day until whenever", nil, nil],
+      ["every day from whenever to friday", nil, nil],
+      ["every day from monday to whenever", nil, nil],
+      ["every day for 0 weeks", nil, nil],
+      ["every day for 2 fortnights", nil, nil],
+    ]
+  end
+
   describe "#time" do
     reads "a date and a time", [
       ["Oct 21 3:30pm", "2026-10-21 15:30"],

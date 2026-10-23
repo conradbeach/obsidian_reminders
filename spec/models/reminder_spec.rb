@@ -21,6 +21,16 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when the vault has a new directive that repeats until a relative date" do
+      it "stores the date it ends on, read once, relative to now" do
+        described_class.sync(vault_with(dentist.merge(line: "Floss (@every day until friday)",
+          directive: "every day until friday")))
+
+        expect(described_class.sole).to have_attributes(remind_at: Time.zone.parse("2026-10-20 09:00"),
+          ends_on: Date.new(2026, 10, 23))
+      end
+    end
+
     context "when the directive's time can't be parsed" do
       it "creates an unscheduled reminder" do
         described_class.sync(vault_with(dentist.merge(directive: "whenever")))
@@ -165,6 +175,62 @@ RSpec.describe Reminder do
         expect(reminder.reload).to have_attributes(
           remind_at: Time.zone.parse("2026-10-22 19:00"), notified_at: nil, completed_at: nil,
         )
+      end
+    end
+
+    # Marks each occurrence done when it's due until the reminder is finished, returning when each was due.
+    def complete_each_occurrence(reminder)
+      times = []
+      until reminder.completed_at
+        times << reminder.remind_at
+        travel_to(reminder.remind_at) { reminder.complete }
+      end
+      times
+    end
+
+    # Read on Monday, October 19, 2026, at 6pm.
+    def scheduled_reminder(directive)
+      described_class.new(note_path: "Errands.md", line: "Run (@#{directive})", directive:).tap(&:schedule)
+        .tap(&:save!)
+    end
+
+    def self.finishes(rows)
+      rows.each do |directive, dates|
+        it "repeats “#{directive}” on #{dates.join(', ')}, then checks it off" do
+          reminder = scheduled_reminder(directive)
+
+          expect { expect(complete_each_occurrence(reminder)).to eq(dates.map { Time.zone.parse(it) }) }
+            .to have_enqueued_job(CheckOffReminderJob).with(reminder).once
+        end
+      end
+    end
+
+    context "when a repeating reminder has an end" do
+      finishes [
+        ["every day until Tuesday", ["2026-10-20 09:00"]],
+        ["every day until Friday", ["2026-10-20 09:00", "2026-10-21 09:00", "2026-10-22 09:00", "2026-10-23 09:00"]],
+        ["every day from Wednesday to Friday", ["2026-10-21 09:00", "2026-10-22 09:00", "2026-10-23 09:00"]],
+        ["every day until friday at 8pm", ["2026-10-19 20:00", "2026-10-20 20:00", "2026-10-21 20:00",
+                                           "2026-10-22 20:00", "2026-10-23 20:00"]],
+        ["every other day from Monday to Friday", ["2026-10-26 09:00", "2026-10-28 09:00", "2026-10-30 09:00"]],
+        ["every day for 1 week", ["2026-10-20 09:00", "2026-10-21 09:00", "2026-10-22 09:00", "2026-10-23 09:00",
+                                  "2026-10-24 09:00", "2026-10-25 09:00", "2026-10-26 09:00"]],
+        ["every week for 2 months", ["2026-10-20 09:00", "2026-10-27 09:00", "2026-11-03 09:00", "2026-11-10 09:00",
+                                     "2026-11-17 09:00", "2026-11-24 09:00", "2026-12-01 09:00", "2026-12-08 09:00",
+                                     "2026-12-15 09:00"]],
+        ["every 3 days for 3 weeks", ["2026-10-20 09:00", "2026-10-23 09:00", "2026-10-26 09:00", "2026-10-29 09:00",
+                                      "2026-11-01 09:00", "2026-11-04 09:00", "2026-11-07 09:00"]],
+        ["every monday and thursday from oct 26 to nov 5 at 7pm",
+         ["2026-10-26 19:00", "2026-10-29 19:00", "2026-11-02 19:00", "2026-11-05 19:00"]],
+      ]
+
+      it "checks it off when it's done after its last day" do
+        reminder = scheduled_reminder("every day until friday")
+        reminder.update!(remind_at: Time.zone.parse("2026-10-22 09:00"))
+
+        travel_to(Time.zone.parse("2026-10-24 10:00")) { reminder.complete }
+
+        expect(reminder.reload.completed_at).to be_present
       end
     end
 

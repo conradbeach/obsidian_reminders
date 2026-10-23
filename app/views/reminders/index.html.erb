@@ -111,9 +111,11 @@
       <% end %>
     <% else %>
       <% if @query %>
-        <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
-          No reminders match “<%= @query %>”.
-        </p>
+        <% if @overdue.none? && @unscheduled.none? %>
+          <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
+            No reminders match “<%= @query %>”.
+          </p>
+        <% end %>
       <% elsif !Current.user.show_today_only? %>
         <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
           Nothing coming up. Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.

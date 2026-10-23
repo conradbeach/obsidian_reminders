@@ -136,6 +136,7 @@ RSpec.describe "Reminders" do
         get root_path(q: "pay")
 
         expect(response.parsed_body.css("#overdue-reminders li p.font-medium").map(&:text)).to eq(["Pay rent"])
+        expect(response.parsed_body.at_css("#upcoming-reminders").text).to_not include("No reminders match")
         expect(response.parsed_body.css("#unscheduled-reminders li p.font-medium").map(&:text))
           .to eq(["Pay the plumber"])
       end

@@ -157,11 +157,12 @@ RSpec.describe Reminder do
   end
 
   describe "#complete" do
-    it "hides the reminder at once and checks it off in its note in the background" do
+    it "hides the reminder at once and checks it off in its note once it can no longer be undone" do
+      freeze_time
       user = create(:user, note_folders: ["Tabitha"])
       reminder = create(:reminder, note_path: "Tabitha/Errands.md")
 
-      expect { reminder.complete }.to have_enqueued_job(CheckOffReminderJob).with(reminder)
+      expect { reminder.complete }.to have_enqueued_job(CheckOffReminderJob).with(reminder).at(10.seconds.from_now)
       expect(user.reminders).to be_empty
     end
 
@@ -257,6 +258,56 @@ RSpec.describe Reminder do
       described_class.notify_due
 
       expect(WebPush).to_not have_received(:payload_send)
+    end
+  end
+
+  describe "#undo_completion" do
+    context "when the reminder was marked done moments ago" do
+      it "puts it back" do
+        user = create(:user, note_folders: ["Tabitha"])
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.hour.ago, notified_at: 1.hour.ago)
+        reminder.complete
+
+        travel 9.seconds
+        expect(reminder.undo_completion).to be(true)
+
+        expect(user.reminders).to eq([reminder])
+        expect(reminder.reload).to have_attributes(completed_at: nil, notified_at: 1.hour.ago - 9.seconds)
+      end
+    end
+
+    context "when the reminder repeats" do
+      it "moves it back to the occurrence that was marked done, as notified as it was" do
+        reminder = create(:reminder, directive: "every monday and thursday at 7pm",
+          line: "Run (@every monday and thursday at 7pm)",
+          remind_at: Time.zone.parse("2026-10-19 19:00"), notified_at: Time.zone.parse("2026-10-19 19:00"))
+        reminder.complete
+
+        reminder.undo_completion
+
+        expect(reminder.reload).to have_attributes(
+          remind_at: Time.zone.parse("2026-10-19 19:00"), notified_at: Time.zone.parse("2026-10-19 19:00"),
+        )
+      end
+    end
+
+    context "when the undo period is over" do
+      it "leaves the reminder done" do
+        freeze_time
+        reminder = create(:reminder)
+        reminder.complete
+
+        travel 10.seconds
+        expect(reminder.undo_completion).to be(false)
+
+        expect(reminder.reload.completed_at).to be_present
+      end
+    end
+
+    context "when the reminder wasn't marked done" do
+      it "leaves it alone" do
+        expect(create(:reminder).undo_completion).to be(false)
+      end
     end
   end
 

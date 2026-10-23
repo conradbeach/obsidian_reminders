@@ -36,4 +36,41 @@ RSpec.describe "Reminder completions" do
       end
     end
   end
+
+  describe "DELETE /reminders/:id/completion" do
+    it "puts back a reminder marked done moments ago" do
+      sign_in create(:user, note_folders: ["Tabitha"])
+      reminder = create(:reminder, note_path: "Tabitha/Errands.md")
+      reminder.complete
+
+      delete reminder_completion_path(reminder)
+
+      expect(response).to have_http_status(:no_content)
+      expect(reminder.reload.completed_at).to be_nil
+    end
+
+    it "refuses once the reminder can no longer be undone" do
+      freeze_time
+      sign_in create(:user, note_folders: ["Tabitha"])
+      reminder = create(:reminder, note_path: "Tabitha/Errands.md")
+      reminder.complete
+      travel 10.seconds
+
+      delete reminder_completion_path(reminder)
+
+      expect(response).to have_http_status(:unprocessable_content)
+      expect(reminder.reload.completed_at).to be_present
+    end
+
+    it "doesn't undo another user's reminder" do
+      sign_in create(:user, note_folders: ["Tabitha"])
+      reminder = create(:reminder, note_path: "Conrad/Errands.md")
+      reminder.complete
+
+      delete reminder_completion_path(reminder)
+
+      expect(response).to have_http_status(:not_found)
+      expect(reminder.reload.completed_at).to be_present
+    end
+  end
 end

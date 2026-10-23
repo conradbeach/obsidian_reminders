@@ -1,6 +1,6 @@
 <% turbo_refreshes_with method: :morph, scroll: :preserve %>
 
-<div data-controller="auto-refresh" data-auto-refresh-interval-value="<%= 20.seconds.in_milliseconds %>">
+<div data-controller="auto-refresh completion" data-auto-refresh-interval-value="<%= 20.seconds.in_milliseconds %>">
   <header class="mb-6 flex items-center justify-between">
     <h1 class="flex items-center gap-3 text-2xl font-bold">
       <%= image_tag "/icon.svg", alt: "", class: "size-9 rounded-lg" %>
@@ -109,5 +109,12 @@
         </section>
       <% end %>
     <% end %>
+  </div>
+
+  <div id="completion-undo" role="status" hidden data-completion-target="toast" data-turbo-permanent
+    class="fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+1rem)] mx-auto flex max-w-md items-center gap-3 rounded-xl bg-gray-900 px-4 py-3 text-white shadow-lg dark:bg-gray-100 dark:text-gray-900">
+    <p class="min-w-0 flex-1 truncate" data-completion-target="message"></p>
+    <button type="button" data-action="completion#undo"
+      class="cursor-pointer font-semibold text-violet-300 dark:text-violet-700">Undo</button>
   </div>
 </div>

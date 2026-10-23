@@ -14,9 +14,23 @@ RSpec.describe CheckOffReminderJob do
   it "checks off the reminder's line in its note" do
     File.write("#{Rails.configuration.x.vault_path}/Errands.md", "- [ ] Call the dentist (@friday)\n")
     reminder = create(:reminder, note_path: "Errands.md", line: "- [ ] Call the dentist (@friday)")
+    reminder.complete
 
     described_class.perform_now(reminder)
 
     expect(File.read("#{Rails.configuration.x.vault_path}/Errands.md")).to eq("- [x] Call the dentist (@friday)\n")
+  end
+
+  context "when marking the reminder done was undone" do
+    it "leaves the note alone" do
+      File.write("#{Rails.configuration.x.vault_path}/Errands.md", "- [ ] Call the dentist (@friday)\n")
+      reminder = create(:reminder, note_path: "Errands.md", line: "- [ ] Call the dentist (@friday)")
+      reminder.complete
+      reminder.undo_completion
+
+      described_class.perform_now(reminder)
+
+      expect(File.read("#{Rails.configuration.x.vault_path}/Errands.md")).to eq("- [ ] Call the dentist (@friday)\n")
+    end
   end
 end

@@ -28,7 +28,7 @@ class Reminder::Directive
   # A repeating reminder's time is its first occurrence.
   def time
     return if @text.empty?
-    return recurrence&.first_time(@now) if recurring?
+    return repeat.first_time if recurring?
     return duration_from_now if DURATION.match?(@text)
 
     date_and_clock_time
@@ -37,23 +37,18 @@ class Reminder::Directive
   # How the reminder repeats ("every monday and thursday at 7pm", "every 6 months from 2027-03-01"), or nil if it
   # doesn't or isn't understood.
   def recurrence
-    return unless recurring?
+    repeat&.recurrence
+  end
 
-    rule, start = @text.split(/\s+(?:from|starting)\s+/, 2)
-    anchor, anchor_clock = start ? starting(start) : []
-    return if start && !anchor
-
-    rule, clock = Reminder::Clock.split(rule)
-    Reminder::Recurrence.parse(rule, clock || anchor_clock || [DATE_ONLY_HOUR, 0], anchor:)
+  # The last day a repeating reminder goes off ("every day until friday"), or nil if it doesn't end.
+  def ends_on
+    repeat&.ends_on
   end
 
   private
 
-  # The starting date, and the time of day if it follows the date rather than the rule: "every day from monday at
-  # 8am" as well as "every day at 8am from monday".
-  def starting(text)
-    date_text, clock = Reminder::Clock.split(text)
-    [self.class.new(date_text, now: @now).time&.to_date, clock]
+  def repeat
+    @repeat ||= Repeat.new(@text, now: @now) if recurring?
   end
 
   def date_and_clock_time

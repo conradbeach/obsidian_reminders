@@ -51,19 +51,27 @@ class Reminder < ApplicationRecord
 
   # Schedules the reminder if it has no time yet, and keeps its heading and notes current.
   def found_in_vault(attributes)
-    self.remind_at ||= Directive.new(directive).time
+    schedule unless remind_at
     update!(**attributes.slice(:heading, :notes), missing_since: nil)
   end
 
-  # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder is hidden at
-  # once and checked off in its note in the background, since that waits on the sync.
+  # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder, or a
+  # repeating one past its last occurrence, is hidden at once and checked off in its note in the background, since
+  # that waits on the sync.
   def complete
-    if recurrence
-      update!(remind_at: recurrence.next_time(occurrence: remind_at, done_at: Time.current), notified_at: nil)
+    if (next_time = next_occurrence)
+      update!(remind_at: next_time, notified_at: nil)
     else
       update!(completed_at: Time.current)
       CheckOffReminderJob.perform_later(self)
     end
+  end
+
+  # Its time and, if it repeats until a date, that date, both read from the directive relative to now.
+  def schedule
+    directive = Directive.new(self.directive)
+    self.remind_at = directive.time
+    self.ends_on = directive.ends_on
   end
 
   def recurrence
@@ -102,5 +110,12 @@ class Reminder < ApplicationRecord
   def obsidian_url
     file = [note_path.delete_suffix(".md"), heading].compact.join("#")
     "obsidian://open?vault=#{ERB::Util.url_encode(Rails.configuration.x.vault_name)}&file=#{ERB::Util.url_encode(file)}"
+  end
+
+  private
+
+  def next_occurrence
+    next_time = recurrence&.next_time(occurrence: remind_at, done_at: Time.current)
+    next_time if next_time && (!ends_on || next_time.to_date <= ends_on)
   end
 end

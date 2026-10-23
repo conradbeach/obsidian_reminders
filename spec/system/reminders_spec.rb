@@ -56,6 +56,30 @@ RSpec.describe "Reminders" do
     expect(reminder.reload.completed_at).to be_nil
   end
 
+  it "searches as you type, keeps the results as the list refreshes, and shows everything again once closed" do
+    user = create(:user, note_folders: ["Tabitha"])
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Call the dentist (@friday)")
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
+    visit root_path
+    sign_in_as(user)
+    expect(page).to have_no_field("Search")
+
+    click_on "Search reminders"
+    fill_in "Search", with: "dent"
+    expect(page).to have_no_content("Pick up dry cleaning")
+    expect(page).to have_content("Call the dentist")
+
+    create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Ask the dentist about the crown (@friday)")
+    page.execute_script("document.dispatchEvent(new Event('visibilitychange'))")
+    expect(page).to have_content("Ask the dentist about the crown")
+    expect(page).to have_no_content("Pick up dry cleaning")
+    expect(page).to have_field("Search", with: "dent")
+
+    click_on "Search reminders"
+    expect(page).to have_content("Pick up dry cleaning")
+    expect(page).to have_no_field("Search")
+  end
+
   it "shows a reminder's notes when tapped, and keeps them open as the list refreshes" do
     user = create(:user, note_folders: ["Tabitha"])
     create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Call the dentist (@friday)",

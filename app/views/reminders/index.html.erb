@@ -43,7 +43,7 @@
     </section>
   <% end %>
 
-  <div class="mb-4" data-controller="new-reminder">
+  <div class="mb-4" data-controller="new-reminder search">
     <div class="flex items-center gap-3">
       <nav id="reminder-filter" class="grid flex-1 grid-cols-2 rounded-lg bg-violet-100 dark:bg-violet-950/60 p-1 text-center text-sm font-medium">
         <% [["Today", true], ["All", false]].each do |label, today_only| %>
@@ -63,7 +63,21 @@
             aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg>
         </button>
       <% end %>
+      <button type="button" aria-label="Search reminders" aria-controls="reminder-search"
+        aria-expanded="<%= @query.present? %>" data-search-target="button" data-action="search#toggle"
+        data-morph-preserve="aria-expanded"
+        class="flex size-9 shrink-0 cursor-pointer items-center justify-center rounded-full bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-950/60 dark:text-violet-300 dark:hover:bg-violet-900">
+        <svg class="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          aria-hidden="true"><circle cx="8.5" cy="8.5" r="5"/><path d="M12.5 12.5L16 16"/></svg>
+      </button>
     </div>
+
+    <%= form_with url: root_path, method: :get, id: "reminder-search", html: { hidden: @query.nil? }, class: "mt-4",
+          data: { search_target: "form", morph_preserve: "hidden", turbo_action: "replace" } do |form| %>
+      <%= form.label :q, "Search", class: "sr-only" %>
+      <%= form.search_field :q, value: @query, placeholder: "Search reminders", autocomplete: "off", class: "input",
+            data: { search_target: "input", action: "search#search" } %>
+    <% end %>
 
     <% if Current.user.reminders_note %>
       <%= form_with model: @addition, url: reminders_path, id: "new-reminder", html: { hidden: @addition.errors.none? },
@@ -96,7 +110,11 @@
         </section>
       <% end %>
     <% else %>
-      <% if !Current.user.show_today_only? %>
+      <% if @query %>
+        <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
+          No reminders match “<%= @query %>”.
+        </p>
+      <% elsif !Current.user.show_today_only? %>
         <p class="rounded-xl bg-white dark:bg-gray-900 p-4 text-gray-500 dark:text-gray-400 shadow-sm">
           Nothing coming up. Add a reminder to any of your notes, like <code>Call the dentist (@tomorrow 9am)</code>.
         </p>

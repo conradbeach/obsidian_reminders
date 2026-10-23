@@ -38,12 +38,17 @@ class RemindersController < ApplicationController
   end
 
   def load_reminders
-    user = Current.user
-    current = user.reminders.scheduled_since(user.overdue_since)
-    current = current.through_today if user.show_today_only?
-    @current_by_day = current.group_by { it.remind_at.to_date }
+    @query = params[:q].presence
+    reminders = Current.user.reminders.matching(@query)
+    @current_by_day = current(reminders).group_by { it.remind_at.to_date }
     # Open until they're checked off or deleted, however old.
-    @overdue = user.reminders.scheduled_before(user.overdue_since)
-    @unscheduled = user.reminders.unscheduled
+    @overdue = reminders.scheduled_before(Current.user.overdue_since)
+    @unscheduled = reminders.unscheduled
+  end
+
+  # Those not yet overdue. A search looks through all of them, even when the user shows only today.
+  def current(reminders)
+    current = reminders.scheduled_since(Current.user.overdue_since)
+    Current.user.show_today_only? && !@query ? current.through_today : current
   end
 end

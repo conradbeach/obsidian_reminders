@@ -176,6 +176,21 @@ RSpec.describe Reminder do
           remind_at: Time.zone.parse("2026-10-22 19:00"), notified_at: nil, completed_at: nil,
         )
       end
+
+      it "keeps a monthly repeat that started on the 31st on the 31st when the month has one" do
+        travel_to Time.zone.parse("2026-10-30 18:00")
+        reminder = scheduled_reminder("every month")
+        times = []
+
+        5.times do
+          times << reminder.remind_at
+          travel_to(reminder.remind_at) { reminder.complete }
+        end
+
+        expect(times).to eq(["2026-10-31", "2026-11-30", "2026-12-31", "2027-01-31", "2027-02-28"]
+          .map { Time.zone.parse("#{it} 09:00") })
+        expect(reminder.remind_at).to eq(Time.zone.parse("2027-03-31 09:00"))
+      end
     end
 
     # Marks each occurrence done when it's due until the reminder is finished, returning when each was due.

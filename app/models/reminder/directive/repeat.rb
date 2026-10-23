@@ -5,8 +5,9 @@
 class Reminder::Directive::Repeat
   LENGTH = /\s+for\s+(?<count>\d+|[a-z]+)\s+(?<unit>day|week|month|year)s?\z/
 
-  def initialize(text, now:)
+  def initialize(text, now:, starts_on: nil)
     @now = now
+    @starts_on = starts_on
     @length = LENGTH.match(text)
     text = @length.pre_match if @length
     text, @end_text = text.split(/\s+until\s+/, 2)
@@ -46,7 +47,7 @@ class Reminder::Directive::Repeat
     clock ||= start_clock || end_clock || [Reminder::Directive::DATE_ONLY_HOUR, 0]
     return yearly_window(clock) if yearly_window?
 
-    Reminder::Recurrence.parse(rule, clock, anchor: start_date)
+    Reminder::Recurrence.parse(rule, clock, anchor: start_date || @starts_on)
   end
 
   def yearly_window?

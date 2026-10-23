@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_013737) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_23_014445) do
   create_table "push_subscriptions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "endpoint", null: false
@@ -35,6 +35,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_013737) do
     t.datetime "completed_at"
     t.text "notes"
     t.date "ends_on"
+    t.date "starts_on"
     t.index ["note_path", "line", "directive"], name: "index_reminders_on_note_path_and_line_and_directive", unique: true
     t.index ["remind_at"], name: "index_reminders_on_remind_at"
   end

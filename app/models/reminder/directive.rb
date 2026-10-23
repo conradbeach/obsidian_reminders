@@ -11,7 +11,7 @@ class Reminder::Directive
 
   COUNT = /(?<count>\d+|[a-z]+)/
   DURATION = /\Ain\s+#{COUNT}\s+(?<unit>minute|min|hour|hr)s?\z/
-  DATE_OFFSET = /\Ain\s+#{COUNT}\s+(?<unit>day|week|month)s?\z/
+  DATE_OFFSET = /\Ain\s+#{COUNT}\s+(?<unit>day|week|month|year)s?\z/
   WEEKDAY = /\A(?:(?<modifier>this|next)\s+)?(?<name>[a-z]{3,})\z/
   CALENDAR_DATES = [
     /\A(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})\z/,

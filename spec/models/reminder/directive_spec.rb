@@ -114,6 +114,7 @@ RSpec.describe Reminder::Directive do
       ["in two weeks at 10am", "2026-11-02 10:00"],
       ["in 2 weeks 5pm", "2026-11-02 17:00"],
       ["in 1 month", "2026-11-19 09:00"],
+      ["in a year", "2027-10-19 09:00"],
     ]
 
     reads "every so many days, weeks, months, or years, which starts at the next time of day", [

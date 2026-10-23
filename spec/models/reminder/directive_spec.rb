@@ -62,6 +62,7 @@ RSpec.describe Reminder::Directive do
     reads "a month and day that have passed this year, which means next year's", [
       ["Oct 1", "2027-10-01 09:00"],
       ["Jan 5", "2027-01-05 09:00"],
+      ["Feb 29", "2028-02-29 09:00"],
     ]
 
     reads "a time of day, which is today's or, once it has passed, tomorrow's", [

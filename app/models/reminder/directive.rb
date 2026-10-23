@@ -13,12 +13,6 @@ class Reminder::Directive
   DURATION = /\Ain\s+#{COUNT}\s+(?<unit>minute|min|hour|hr)s?\z/
   DATE_OFFSET = /\Ain\s+#{COUNT}\s+(?<unit>day|week|month|year)s?\z/
   WEEKDAY = /\A(?:(?<modifier>this|next)\s+)?(?<name>[a-z]{3,})\z/
-  CALENDAR_DATES = [
-    /\A(?<year>\d{4})-(?<month>\d{1,2})-(?<day>\d{1,2})\z/,
-    %r{\A(?<month>\d{1,2})/(?<day>\d{1,2})(?:/(?<year>\d{4}|\d{2}))?\z},
-    /\A(?<month>[a-z]{3,})\.?\s+(?<day>\d{1,2})(?:st|nd|rd|th)?(?:\s+(?<year>\d{4}))?\z/,
-    /\A(?<day>\d{1,2})(?:st|nd|rd|th)?\s+(?:of\s+)?(?<month>[a-z]{3,})\.?(?:\s+(?<year>\d{4}))?\z/,
-  ].freeze
 
   def self.count(text)
     Integer(text, 10, exception: false) || COUNTS[text]
@@ -116,23 +110,8 @@ class Reminder::Directive
     end
   end
 
-  # Without a year, the date's next occurrence.
   def calendar_date(today, text)
-    match = CALENDAR_DATES.lazy.filter_map { it.match(text) }.first or return
-    year = year(match[:year])
-    date = valid_date(year || today.year, month(match[:month]), match[:day].to_i) or return
-    [date < today && !year ? date.next_year : date]
-  end
-
-  def valid_date(year, month, day)
-    Date.new(year, month, day) if month && Date.valid_date?(year, month, day)
-  end
-
-  def year(text)
-    text && (text.length == 2 ? 2000 + text.to_i : text.to_i)
-  end
-
-  def month(text)
-    Integer(text, 10, exception: false) || MONTHS.index { it.start_with?(text) }&.succ
+    date = Reminder::CalendarDate.parse(text, today:)
+    [date] if date
   end
 end

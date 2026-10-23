@@ -38,6 +38,24 @@ RSpec.describe "Reminders" do
     expect(page).to have_content("Nothing coming up")
   end
 
+  it "puts back a reminder marked done when Undo is tapped" do
+    user = create(:user, note_folders: ["Tabitha"])
+    reminder = create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Pick up dry cleaning (@friday)")
+    visit root_path
+    sign_in_as(user)
+
+    click_on "Mark “Pick up dry cleaning” done"
+    expect(page).to have_content("Nothing coming up")
+    within("#completion-undo") do
+      expect(page).to have_content("Done: Pick up dry cleaning")
+      click_on "Undo"
+    end
+
+    expect(page).to have_css("#upcoming-reminders", text: "Pick up dry cleaning")
+    expect(page).to have_no_css("#completion-undo")
+    expect(reminder.reload.completed_at).to be_nil
+  end
+
   it "shows a reminder's notes when tapped, and keeps them open as the list refreshes" do
     user = create(:user, note_folders: ["Tabitha"])
     create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Call the dentist (@friday)",

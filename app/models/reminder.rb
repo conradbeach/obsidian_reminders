@@ -5,6 +5,8 @@ class Reminder < ApplicationRecord
   # A reminder missing from the vault is only deleted after this long, so one that briefly disappears (a scan reading
   # a note while Obsidian rewrites it) comes back with its original time rather than as a new reminder.
   MISSING_GRACE_PERIOD = 5.minutes
+  # How long marking a reminder done can be undone. Its note isn't checked off until then.
+  UNDO_PERIOD = 10.seconds
   # A reminder is the same reminder as long as its note, line, and directive are unchanged.
   IDENTITY = [:note_path, :line, :directive].freeze
   LIST_MARKER = /\A(?:[-*+]|\d+[.)])\s+(?:\[.\]\s+)?/
@@ -57,14 +59,23 @@ class Reminder < ApplicationRecord
 
   # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder, or a
   # repeating one past its last occurrence, is hidden at once and checked off in its note in the background, since
-  # that waits on the sync.
+  # that waits on the sync and on the undo period.
   def complete
+    undo = { undoable_until: UNDO_PERIOD.from_now, undo_remind_at: remind_at, undo_notified_at: notified_at }
+
     if (next_time = next_occurrence)
-      update!(remind_at: next_time, notified_at: nil)
+      update!(remind_at: next_time, notified_at: nil, **undo)
     else
-      update!(completed_at: Time.current)
-      CheckOffReminderJob.perform_later(self)
+      update!(completed_at: Time.current, **undo)
+      CheckOffReminderJob.set(wait_until: undoable_until).perform_later(self)
     end
+  end
+
+  # Puts back a reminder marked done within the undo period. False once it's over.
+  def undo_completion
+    return false unless undoable_until&.future?
+
+    update!(remind_at: undo_remind_at, notified_at: undo_notified_at, completed_at: nil, undoable_until: nil)
   end
 
   # Its time and, if it repeats, the day it starts on and any day it ends on, read from the directive relative to now.

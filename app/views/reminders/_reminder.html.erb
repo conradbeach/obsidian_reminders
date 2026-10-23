@@ -1,6 +1,9 @@
 <li class="flex items-start gap-3 py-3">
   <%= button_to reminder_completion_path(reminder), form_class: "shrink-0", aria: { label: "Mark “#{reminder.text}” done" },
-        class: "mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 dark:border-violet-500 hover:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950" do %>
+        form: { data: { action: "completion#complete", completion_text_param: reminder.text } },
+        class: "group mt-0.5 size-6 shrink-0 cursor-pointer rounded-full border-2 border-violet-300 dark:border-violet-500 hover:border-violet-600 hover:bg-violet-50 dark:hover:bg-violet-950 transition-colors data-done:border-violet-600! data-done:bg-violet-600!" do %>
+    <svg class="hidden size-full text-white group-data-done:block" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+      stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5.5 10.5l3 3 6-7"/></svg>
   <% end %>
   <% if reminder.notes %>
     <details id="<%= dom_id(reminder, :notes) %>" class="group min-w-0 flex-1" data-morph-preserve="open">

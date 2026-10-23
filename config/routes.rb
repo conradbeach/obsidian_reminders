@@ -2,7 +2,7 @@ Rails.application.routes.draw do
   resource :session
   resource :push_subscription, only: [:create, :destroy]
   resources :reminders, only: [:index, :create] do
-    resource :completion, only: :create, module: :reminders
+    resource :completion, only: [:create, :destroy], module: :reminders
   end
   resource :settings, only: [:show, :update]
   resource :guide, only: :show

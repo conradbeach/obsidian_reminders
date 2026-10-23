@@ -5,87 +5,9 @@ in Obsidian, organized however she likes; this app only reads them.
 
 ## Writing reminders
 
-Put `(@` + a time + `)` anywhere in a note:
-
-```markdown
-- [ ] Call the dentist (@tomorrow 9am)
-- [ ] Renew the car registration (@Nov 1)
-Water the plants (@friday 6pm)
-```
-
-- Times are parsed by `Reminder::Directive`, which understands:
-  - dates: `today`, `tomorrow`, weekdays (`friday`, `fri`, `next friday`),
-    `Oct 21`, `October 21st 2027`, `21 Oct`, `10/21`, `10/21/26`, `2026-10-21`
-  - times: `9am`, `9:30 p.m.`, `21:00`, `noon`, before or after the date, with
-    or without `at` (`tomorrow at 9am`, `3pm friday`)
-  - durations: `in 30 minutes`, `in an hour`, `in 3 days`, `in two weeks at 10am`
-
-  Everything is Mountain time. A date with no time goes off at 9am. A time with
-  no date is the next one, so `9am` written in the evening means tomorrow
-  morning; a weekday whose time has already passed today means next week.
-  Anything else (`next week`, a bare `9`) isn't guessed at: it shows up under
-  **Needs a clearer time**.
-- Repeating reminders start with `every`:
-  - intervals: `(@every 3 days)`, `(@every day at 8am)`, `(@every other week)`,
-    `(@every 6 months)`, `(@every 2 years)`
-  - weekdays: `(@every weekday at 7:30am)`, `(@every monday and thursday at 7pm)`,
-    `(@every 2 weeks on tuesday at 7:50am)`
-  - every few months on a day of the month: `(@every 3 months on the third sunday)`,
-    `(@every 2 months on the 1st)`
-  - dates: `(@every year on october 1)`, `(@every april 19)`,
-    `(@every sep 1, dec 1, mar 1 and jun 1)`,
-    `(@every month on the 15th)`, `(@every 2nd tue)`,
-    `(@every last saturday in october)`, `(@every 3rd sat of sep)`,
-    `(@every 3rd saturday in january, march, june, august and november)`
-  - any of those joined with "and": `(@every 1st and 15th)`,
-    `(@every 2nd and 4th monday)`, `(@every 2nd saturday in november and 2nd saturday in may)`
-
-  Adding `from <date>` (`(@every 6 months from 2027-03-01)`) makes that date the
-  first occurrence; otherwise it's the next one that hasn't passed. A repeat can
-  end: `(@every day until friday)`, `(@every day from december 1 to december 12)`,
-  or `(@every 3 days for 3 weeks)`. Ends include their last day, a length counts
-  from the first occurrence, and relative ends ("friday") are read once, when the
-  app first sees the reminder. Marking the last occurrence done checks it off in
-  the note. `(@every year from september 1 to september 7)` is different: every
-  day of that window, every year. A repeating
-  reminder notifies once per occurrence and stays (eventually Overdue)
-  until it's marked done in the app, which moves it to its next occurrence:
-  intervals count from the day it was done (months and years keep to the day they
-  started on, so one started January 31st comes due February 28th, then March
-  31st); everything else moves to its next scheduled date. Checking its line off in Obsidian, or removing it, ends it for
-  good.
-- Relative times are measured from when the app first sees the reminder, about
-  a minute after the note syncs. Once seen, a reminder keeps its time even if the
-  words would mean something else later ("tomorrow" stays that tomorrow).
-- Reminders belong to whoever's folders contain the note. Each user lists their
-  folders in **Settings** (say, `Tabitha`), and sees and is notified about
-  reminders in notes anywhere inside them. A folder you both list is shared;
-  reminders in notes outside everyone's folders are ignored.
-- Each reminder notifies each of its users' subscribed devices once. Tapping the notification
-  opens the app, where the note's name opens it in Obsidian at the heading the
-  reminder is under (Obsidian links can't point to a line).
-- Checked-off tasks (`- [x]`) don't notify.
-- Reminders can be added in the app too, from the **+** button beside the
-  Today/All toggle, once a user picks a note for them in **Settings** (in one of
-  their folders). "Call the dentist" and "tomorrow 9am"
-  become `- [ ] Call the dentist (@tomorrow 9am)` at the end of that note, which
-  is created if need be.
-- Lines indented under a reminder's line are its notes. The app shows a notes
-  icon on reminders that have them; tapping the reminder opens them. Editing
-  notes doesn't change the reminder's time.
-- Editing anything on a reminder's line, even a typo, makes it a new reminder
-  whose time is read again at that moment. A relative directive has to be
-  updated along with the edit: fixing a typo tomorrow in a `(@tomorrow)`
-  reminder means changing it to `(@today)` too. Absolute dates (`Oct 21 3pm`)
-  are unaffected unless the date has passed.
-- A reminder whose time has passed stays listed on its day (under
-  **Yesterday** if need be) until it's been past for each user's overdue hours
-  (24 by default, set in **Settings**). Then it moves to **Overdue**, where it
-  stays, however old, until it's checked off or removed from the note.
-- Tapping the circle beside a one-time reminder marks it done: it disappears from the
-  app at once, and the app checks it off in the note (`- [x]`, adding a
-  checkbox if the line had none), which reaches her other devices within about
-  a minute. Obsidian Sync's version history can undo it.
+Put `(@` + a time + `)` on any line of a note: `- [ ] Call the dentist (@tomorrow 9am)`.
+The app's guide (the **?** in its header, at `/guide`) explains every form a time
+can take and how reminders behave. Its source is `app/views/guides/show.html.erb`.
 
 ## API
 

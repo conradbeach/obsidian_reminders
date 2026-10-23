@@ -59,11 +59,34 @@
   </section>
 <% end %>
 
+<section class="mb-6 rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">
+  <h2 class="mb-2 font-semibold">Good to know</h2>
+  <ul class="list-disc space-y-2 pl-5 text-sm text-gray-500 dark:text-gray-400">
+    <li>
+      Reminders belong to whoever's folders, chosen in Settings, hold the note. A folder you both choose is shared.
+    </li>
+    <li>
+      A time is read once, about a minute after the note syncs: “tomorrow” keeps meaning that tomorrow. Editing the
+      line reads it again, so fixing a typo a day later in a “tomorrow” reminder means changing it to “today” too.
+    </li>
+    <li>Each reminder notifies each of your devices once. Tapping the note's name opens it in Obsidian.</li>
+    <li>
+      A reminder whose time has passed stays on its day until your overdue hours, set in Settings, have gone by. Then
+      it's listed under Overdue until it's done.
+    </li>
+    <li>
+      Marking a reminder done here checks it off in the note, adding a checkbox if the line had none. Obsidian Sync's
+      version history can undo it.
+    </li>
+  </ul>
+</section>
+
 <section class="rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">
   <h2 class="mb-2 font-semibold">How repeats move on</h2>
   <p class="text-sm text-gray-500 dark:text-gray-400">
     Marking a repeating reminder done moves it to its next time. “Every 3 days” and the like count from the day it
-    was done; everything else keeps to its schedule. Marking the last one of a repeat that ends checks it off in the
+    was done, though months and years keep to the day they started on (the 31st comes back after February);
+    everything else keeps to its schedule. Marking the last one of a repeat that ends checks it off in the
     note; checking off its line in Obsidian ends it for good.
   </p>
 </section>

@@ -18,7 +18,7 @@ RSpec.describe Vault do
 
         expect(described_class.new(vault_path).reminders).to contain_exactly(
           { note_path: "Home/Errands.md", line: "- [ ] Call the dentist (@tomorrow 9am)", directive: "tomorrow 9am",
-            heading: "Errands", notes: nil },
+            heading: "Errands", notes: nil, block_id: nil },
         )
       end
     end
@@ -58,6 +58,23 @@ RSpec.describe Vault do
         write_note("Errands.md", "Renew passport (@Nov 1) (@Dec 1)")
 
         expect(described_class.new(vault_path).reminders.pluck(:directive)).to eq(["Nov 1", "Dec 1"])
+      end
+    end
+
+    context "when a line ends with a block ID" do
+      it "returns the ID with the line" do
+        write_note("Errands.md", "- [ ] Call the dentist (@friday) ^K3P9\n")
+
+        expect(described_class.new(vault_path).reminders.sole)
+          .to include(line: "- [ ] Call the dentist (@friday) ^K3P9", block_id: "K3P9")
+      end
+    end
+
+    context "when a line with more than one directive ends with a block ID" do
+      it "returns neither reminder with the ID, since it can't tell them apart" do
+        write_note("Errands.md", "Renew passport (@Nov 1) (@Dec 1) ^K3P9")
+
+        expect(described_class.new(vault_path).reminders.pluck(:block_id)).to eq([nil, nil])
       end
     end
 
@@ -127,6 +144,42 @@ RSpec.describe Vault do
         described_class.new(vault_path).append(note_path: "Tabitha/Inbox.md", line: "- [ ] Return books (@monday)")
 
         expect(vault_path.join("Tabitha/Inbox.md").read).to eq("- [ ] Return books (@monday)\n")
+      end
+    end
+  end
+
+  describe "#identify" do
+    def identify(line)
+      described_class.new(vault_path).identify(note_path: "Errands.md", line:, block_id: "K3P9")
+    end
+
+    context "when the line has no block ID" do
+      it "ends it with the ID, keeping its indentation and line ending" do
+        write_note("Errands.md", "# Errands\r\n  - [ ] Call the dentist (@friday)\r\nPick up dry cleaning (@monday)")
+
+        expect(identify("- [ ] Call the dentist (@friday)")).to be(true)
+        expect(vault_path.join("Errands.md").read)
+          .to eq("# Errands\r\n  - [ ] Call the dentist (@friday) ^K3P9\r\nPick up dry cleaning (@monday)")
+      end
+    end
+
+    context "when copies of the line share a block ID" do
+      it "replaces the last one's ID" do
+        write_note("Errands.md", "Call the dentist (@friday) ^AAAA\nCall the dentist (@friday) ^AAAA\n")
+
+        identify("Call the dentist (@friday) ^AAAA")
+
+        expect(vault_path.join("Errands.md").read)
+          .to eq("Call the dentist (@friday) ^AAAA\nCall the dentist (@friday) ^K3P9\n")
+      end
+    end
+
+    context "when the line has changed" do
+      it "changes nothing and returns false" do
+        write_note("Errands.md", "Call the dentist (@saturday)\n")
+
+        expect(identify("Call the dentist (@friday)")).to be(false)
+        expect(vault_path.join("Errands.md").read).to eq("Call the dentist (@saturday)\n")
       end
     end
   end

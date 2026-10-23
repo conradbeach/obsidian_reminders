@@ -19,6 +19,71 @@ RSpec.describe Reminder do
 
         expect(described_class.sole).to have_attributes(**dentist, remind_at: Time.zone.parse("2026-10-20 09:00"))
       end
+
+      it "gives its line a block ID in two minutes" do
+        expect { described_class.sync(vault_with(dentist)) }
+          .to have_enqueued_job(IdentifyReminderJob).at(2.minutes.from_now)
+      end
+    end
+
+    context "when the vault has a line with more than one new directive" do
+      it "doesn't give the line a block ID" do
+        line = "Renew passport (@Nov 1) (@Dec 1)"
+
+        expect { described_class.sync(vault_with(dentist.merge(line:, directive: "Nov 1"), dentist.merge(line:))) }
+          .to_not have_enqueued_job(IdentifyReminderJob)
+      end
+    end
+
+    context "when a reminder's line has been given a block ID" do
+      it "takes on the ID, keeping its time" do
+        reminder = create(:reminder, **dentist, remind_at: 2.hours.ago, notified_at: 1.hour.ago)
+
+        described_class.sync(vault_with(dentist.merge(line: "#{dentist[:line]} ^K3P9", block_id: "K3P9")))
+
+        expect(described_class.sole).to have_attributes(id: reminder.id, block_id: "K3P9", remind_at: 2.hours.ago,
+          notified_at: 1.hour.ago, line: "Call the dentist (@tomorrow 9am) ^K3P9")
+      end
+    end
+
+    context "when the words of a line with a block ID are edited, or it moves to another note" do
+      it "keeps the reminder and its time, with the new line" do
+        reminder = create(:reminder, **dentist, line: "Call the dentist (@tomorrow 9am) ^K3P9", block_id: "K3P9",
+          remind_at: 2.hours.ago, notified_at: 1.hour.ago)
+
+        described_class.sync(vault_with(dentist.merge(note_path: "Health.md",
+          line: "Call Dr. Lee (@tomorrow 9am) ^K3P9", block_id: "K3P9")))
+
+        expect(described_class.sole).to have_attributes(id: reminder.id, note_path: "Health.md",
+          line: "Call Dr. Lee (@tomorrow 9am) ^K3P9", remind_at: 2.hours.ago, notified_at: 1.hour.ago)
+      end
+    end
+
+    context "when the directive of a line with a block ID is edited" do
+      it "reads the new time relative to now, to be notified about again" do
+        reminder = create(:reminder, **dentist, line: "Call the dentist (@tomorrow 9am) ^K3P9", block_id: "K3P9",
+          remind_at: 2.hours.ago, notified_at: 1.hour.ago)
+
+        described_class.sync(vault_with(dentist.merge(line: "Call the dentist (@friday 2pm) ^K3P9",
+          directive: "friday 2pm", block_id: "K3P9")))
+
+        expect(described_class.sole).to have_attributes(id: reminder.id, directive: "friday 2pm",
+          remind_at: Time.zone.parse("2026-10-23 14:00"), notified_at: nil)
+      end
+    end
+
+    context "when a line with a block ID is copied" do
+      it "keeps the reminder for the original and makes the copy a new reminder that gets its own ID" do
+        original = dentist.merge(line: "Call the dentist (@tomorrow 9am) ^K3P9", block_id: "K3P9")
+        reminder = create(:reminder, **original, remind_at: 2.hours.ago)
+        copy = original.merge(line: "Call the vet (@tomorrow 9am) ^K3P9")
+
+        expect { described_class.sync(vault_with(original, copy)) }.to have_enqueued_job(IdentifyReminderJob)
+
+        expect(reminder.reload).to have_attributes(block_id: "K3P9", remind_at: 2.hours.ago)
+        expect(described_class.where.not(id: reminder.id).sole).to have_attributes(block_id: nil,
+          line: "Call the vet (@tomorrow 9am) ^K3P9", remind_at: Time.zone.parse("2026-10-20 09:00"))
+      end
     end
 
     context "when the vault has a new directive that repeats until a relative date" do
@@ -317,6 +382,12 @@ RSpec.describe Reminder do
         reminder = build(:reminder, line: "- [ ] Call the dentist (@tomorrow 9am) about Tuesday")
 
         expect(reminder.text).to eq("Call the dentist about Tuesday")
+      end
+    end
+
+    context "when the line ends with a block ID" do
+      it "returns the task without the ID" do
+        expect(build(:reminder, line: "- [ ] Call the dentist (@friday) ^K3P9").text).to eq("Call the dentist")
       end
     end
 

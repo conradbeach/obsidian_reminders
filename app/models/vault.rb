@@ -1,6 +1,8 @@
 # The synced copy of the Obsidian vault on disk.
 class Vault
   DIRECTIVE = /\(@([^)]+)\)/
+  # An Obsidian block ID ending a line: "Call the dentist (@friday) ^K3P9". It identifies a reminder through edits.
+  BLOCK_ID = /\s+\^([A-Za-z0-9-]+)\z/
   COMPLETED_TASK = /\A\s*(?:[-*+]|\d+[.)])\s+\[[xX]\]/
   # Shared with the obsidian accessory's sync loop (config/obsidian/start.sh), so the app never edits a note while
   # Obsidian Headless is syncing it. Dot-files aren't synced.
@@ -23,9 +25,15 @@ class Vault
     @path = Pathname(path)
   end
 
-  # Attributes for each (@...) directive in the vault's notes, with the heading it's under, skipping completed tasks
-  # and code, where "(@" is usually an instance variable. Hidden folders such as .obsidian and .trash aren't searched,
-  # and conflicted copies are skipped.
+  # The directives in a line, leaving out any in inline code.
+  def self.directives_in(line)
+    line.gsub(INLINE_CODE, "").scan(DIRECTIVE).map { it.first.strip }
+  end
+
+  # Attributes for each (@...) directive in the vault's notes, with the heading it's under and the line's block ID,
+  # skipping completed tasks and code, where "(@" is usually an instance variable. A line with several directives has
+  # no block ID, since one ID can't tell its reminders apart. Hidden folders such as .obsidian and .trash aren't
+  # searched, and conflicted copies are skipped.
   def reminders
     notes.flat_map { |note| reminders_in(note) }.uniq
   end
@@ -33,6 +41,11 @@ class Vault
   # Checks off the reminder's line in its note. Returns whether the note had exactly one such line to check off.
   def check_off(note_path:, line:)
     synchronize { Note.new(@path.join(note_path)).check_off(line) }
+  end
+
+  # Ends the reminder's line with the block ID, replacing any it has. Returns whether the note had such a line.
+  def identify(note_path:, line:, block_id:)
+    synchronize { Note.new(@path.join(note_path)).identify(line, block_id) }
   end
 
   # Adds the line to the end of the note, creating the note if need be.
@@ -69,10 +82,15 @@ class Vault
       heading = Regexp.last_match(1) if line.match(HEADING)
       next [] if line.match?(COMPLETED_TASK)
 
-      line.gsub(INLINE_CODE, "").scan(DIRECTIVE).map do |(directive)|
-        { note_path:, line:, directive: directive.strip, heading:, notes: notes_under(lines, index) }
-      end
+      reminders_on(line, lines, index, note_path:, heading:)
     end
+  end
+
+  # A reminder for each of the directives in the line at index.
+  def reminders_on(line, lines, index, **attributes)
+    directives = self.class.directives_in(line)
+    block_id = line[BLOCK_ID, 1] if directives.one?
+    directives.map { { **attributes, line:, directive: it, notes: notes_under(lines, index), block_id: } }
   end
 
   # The note's lines, leaving out fenced code blocks.

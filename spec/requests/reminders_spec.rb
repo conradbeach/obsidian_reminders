@@ -197,10 +197,24 @@ RSpec.describe "Reminders" do
       post reminders_path, params: { reminder_addition: { text: " Call the  dentist ", time: "tomorrow 9am" } }
       follow_redirect!
 
-      expect(inbox.read).to eq("- [ ] Call the dentist (@tomorrow 9am)\n")
+      block_id = Reminder.sole.block_id
+      expect(block_id).to match(/\A[A-Z0-9]{4}\z/)
+      expect(inbox.read).to eq("- [ ] Call the dentist (@tomorrow 9am) ^#{block_id}\n")
       expect(Reminder.sole).to have_attributes(note_path: "Tabitha/Inbox.md", directive: "tomorrow 9am",
         remind_at: Time.zone.parse("2026-10-20 09:00"))
       expect(response.parsed_body.css("#upcoming-reminders li p.font-medium").map(&:text)).to eq(["Call the dentist"])
+    end
+
+    context "when the reminder repeats until a relative date" do
+      it "stores the date it ends on" do
+        travel_to Time.zone.parse("2026-10-19 18:00")
+        sign_in create(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/Inbox.md")
+
+        post reminders_path, params: { reminder_addition: { text: "Floss", time: "every day until friday" } }
+
+        expect(Reminder.sole).to have_attributes(remind_at: Time.zone.parse("2026-10-20 09:00"),
+          starts_on: Date.new(2026, 10, 20), ends_on: Date.new(2026, 10, 23))
+      end
     end
 
     context "when the time isn't understood" do

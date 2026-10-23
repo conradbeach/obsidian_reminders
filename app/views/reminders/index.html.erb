@@ -7,14 +7,14 @@
       Reminders
     </h1>
     <nav class="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400">
+      <%= link_to "Settings", settings_path %>
+      <%= button_to "Sign out", session_path, method: :delete %>
       <%= link_to guide_path, aria: { label: "Guide to writing reminders" }, class: "hover:text-violet-700 dark:hover:text-violet-300" do %>
         <svg class="size-5" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"
           stroke-linejoin="round" aria-hidden="true">
           <circle cx="10" cy="10" r="8"/><path d="M7.8 7.6a2.3 2.3 0 0 1 4.4.9c0 1.5-2.2 2-2.2 3.2M10 14.3h.01"/>
         </svg>
       <% end %>
-      <%= link_to "Settings", settings_path %>
-      <%= button_to "Sign out", session_path, method: :delete %>
     </nav>
   </header>
 

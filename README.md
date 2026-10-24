@@ -278,6 +278,15 @@ have already been sent. The vault itself is backed up by Obsidian Sync.
 4. `bin/kamal accessory boot litestream` (or `bin/kamal setup` on a new
    server), then check `bin/kamal accessory logs litestream` for errors.
 
+### Checking the backup
+
+`bin/check-backup` restores the latest backup from R2 beside the live database,
+checks its integrity, compares its row counts and latest reminder change with
+the live database's, and deletes the copy. It fails if the backup is damaged or
+more than five minutes behind. Run it about once a month, and after changing
+Litestream's version or settings; agents do so when `tmp/backup-checked` (which
+it touches on success) is missing or over 30 days old.
+
 ### Restoring onto a new server
 
 The Litestream accessory restores the latest backup whenever the server has no

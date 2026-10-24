@@ -60,7 +60,7 @@ accessories:
   # app reads reminders from it and checks them off in it. Waits until the vault
   # has been set up (see README.md).
   obsidian:
-    image: node:24.19.0-slim
+    image: node:24.22.1-slim
     host: <%= KAMAL_CREDENTIALS.dig(:deploy, :server) %>
     cmd: /etc/obsidian/start.sh
     options:
@@ -77,7 +77,7 @@ accessories:
   # with other apps on the server. Host networking lets it reach kamal-proxy
   # on localhost.
   tailscale:
-    image: tailscale/tailscale:v1.102.5
+    image: tailscale/tailscale:v1.104.2
     host: <%= KAMAL_CREDENTIALS.dig(:deploy, :server) %>
     network: host
     env:

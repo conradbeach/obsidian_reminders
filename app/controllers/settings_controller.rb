@@ -12,8 +12,8 @@ class SettingsController < ApplicationController
   private
 
   def settings_params
-    params.expect(user: [:note_folders, :overdue_after_hours, :reminders_note]).tap do |settings|
-      settings[:note_folders] = settings[:note_folders].split(/\R/) if settings.key?(:note_folders)
+    params.expect(user: [:note_folders, :ignored_folders, :overdue_after_hours, :reminders_note]).tap do |settings|
+      [:note_folders, :ignored_folders].each { settings[it] = settings[it].split(/\R/) if settings.key?(it) }
     end
   end
 end

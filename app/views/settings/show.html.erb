@@ -28,6 +28,12 @@
     </p>
     <%= form.textarea :note_folders, value: Current.user.note_folders.join("\n"), rows: 5, placeholder: "Tabitha",
           class: "input mt-3 font-mono" %>
+    <%= form.label :ignored_folders, "Folders to ignore, one per line", class: "mt-4 block" %>
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+      Notes in these folders, like web clippings, can have text that looks like a reminder, such as “(@handle)”.
+    </p>
+    <%= form.textarea :ignored_folders, value: Current.user.ignored_folders.join("\n"), rows: 3,
+          placeholder: "Tabitha/Clippings", class: "input mt-3 font-mono" %>
   </section>
 
   <section id="overdue" class="rounded-xl bg-white dark:bg-gray-900 p-4 shadow-sm">

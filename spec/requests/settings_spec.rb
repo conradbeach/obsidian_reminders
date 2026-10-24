@@ -12,14 +12,15 @@ RSpec.describe "Settings" do
   end
 
   describe "PATCH /settings" do
-    it "saves the folders, one per line, and the overdue hours for the signed-in user" do
+    it "saves the folders and ignored folders, one per line, and the overdue hours for the signed-in user" do
       user = sign_in create(:user, note_folders: ["Old"])
 
-      patch settings_path,
-        params: { user: { note_folders: "Tabitha\r\n/Family/Errands/\r\n", overdue_after_hours: "6" } }
+      patch settings_path, params: { user: { note_folders: "Tabitha\r\n/Family/Errands/\r\n",
+                                             ignored_folders: "Tabitha/Clippings\r\n", overdue_after_hours: "6" } }
 
       expect(response).to redirect_to(settings_path)
-      expect(user.reload).to have_attributes(note_folders: ["Tabitha", "Family/Errands"], overdue_after_hours: 6)
+      expect(user.reload).to have_attributes(note_folders: ["Tabitha", "Family/Errands"],
+        ignored_folders: ["Tabitha/Clippings"], overdue_after_hours: 6)
     end
 
     context "when the overdue hours are negative" do

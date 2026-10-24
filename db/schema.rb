@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_23_155707) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_24_030132) do
   create_table "push_subscriptions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "endpoint", null: false
@@ -63,6 +63,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_23_155707) do
     t.integer "overdue_after_hours", default: 24, null: false
     t.string "reminders_note"
     t.string "api_token"
+    t.json "ignored_folders", default: [], null: false
     t.index ["api_token"], name: "index_users_on_api_token", unique: true
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end

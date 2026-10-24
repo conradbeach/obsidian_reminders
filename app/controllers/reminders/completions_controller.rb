@@ -12,7 +12,7 @@ class Reminders::CompletionsController < ApplicationController
 
   # Undoes marking the reminder done, which is only possible for a few seconds afterwards.
   def destroy
-    reminder = Reminder.in_vault.in_folders(Current.user.note_folders).find(params.expect(:reminder_id))
+    reminder = Current.user.reminders_including_completed.find(params.expect(:reminder_id))
     head reminder.undo_completion ? :no_content : :unprocessable_content
   end
 end

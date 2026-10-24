@@ -21,8 +21,38 @@ RSpec.describe Reminder do
       end
 
       it "gives its line a block ID in two minutes" do
-        expect { described_class.sync(vault_with(dentist)) }
+        create(:user, note_folders: ["Tabitha"])
+
+        expect { described_class.sync(vault_with(dentist.merge(note_path: "Tabitha/Errands.md"))) }
           .to have_enqueued_job(IdentifyReminderJob).at(2.minutes.from_now)
+      end
+    end
+
+    context "when the vault has a new directive in a note outside everyone's folders" do
+      it "doesn't give its line a block ID" do
+        create(:user, note_folders: ["Tabitha"])
+
+        expect { described_class.sync(vault_with(dentist.merge(note_path: "Clippings/Article.md"))) }
+          .to_not have_enqueued_job(IdentifyReminderJob)
+      end
+    end
+
+    context "when the vault has a new directive whose time can't be read" do
+      it "doesn't give its line a block ID" do
+        create(:user, note_folders: ["Tabitha"])
+        unreadable = dentist.merge(note_path: "Tabitha/Errands.md", line: "Ask (@shardiban)", directive: "shardiban")
+
+        expect { described_class.sync(vault_with(unreadable)) }.to_not have_enqueued_job(IdentifyReminderJob)
+      end
+    end
+
+    context "when an unscheduled reminder's directive can now be parsed and someone receives it" do
+      it "gives its line a block ID" do
+        create(:user, note_folders: ["Tabitha"])
+        create(:reminder, **dentist, note_path: "Tabitha/Errands.md", remind_at: nil)
+
+        expect { described_class.sync(vault_with(dentist.merge(note_path: "Tabitha/Errands.md"))) }
+          .to have_enqueued_job(IdentifyReminderJob)
       end
     end
 
@@ -74,7 +104,9 @@ RSpec.describe Reminder do
 
     context "when a line with a block ID is copied" do
       it "keeps the reminder for the original and makes the copy a new reminder that gets its own ID" do
-        original = dentist.merge(line: "Call the dentist (@tomorrow 9am) ^K3P9", block_id: "K3P9")
+        create(:user, note_folders: ["Tabitha"])
+        original = dentist.merge(note_path: "Tabitha/Errands.md", line: "Call the dentist (@tomorrow 9am) ^K3P9",
+          block_id: "K3P9")
         reminder = create(:reminder, **original, remind_at: 2.hours.ago)
         copy = original.merge(line: "Call the vet (@tomorrow 9am) ^K3P9")
 

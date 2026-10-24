@@ -25,8 +25,10 @@ module Reminder::Identifiable
     Vault.synced.identify(note_path:, line:, block_id: self.class.new_block_id)
   end
 
-  # Without a block ID of its own, on a line with no other reminder.
+  # Without a block ID of its own, on a line with no other reminder. Only a scheduled reminder that someone receives
+  # is worth editing its note for: a line in a note outside everyone's folders, or with a time that can't be read, is
+  # likely not meant as a reminder.
   def identifiable?
-    !block_id && Vault.directives_in(line).one?
+    !block_id && remind_at && Vault.directives_in(line).one? && recipients.any?
   end
 end

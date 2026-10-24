@@ -18,10 +18,8 @@ class Reminder < ApplicationRecord
   scope :scheduled_before, ->(time) { where(remind_at: ...time).order(:remind_at) }
   scope :through_today, -> { where(remind_at: ..Time.current.end_of_day) }
   scope :unscheduled, -> { where(remind_at: nil).order(:note_path, :line) }
-  scope :in_folders, lambda { |folders|
-    conditions = folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }
-    conditions.any? ? where(conditions.reduce(:or)) : none
-  }
+  scope :in_folders, ->(folders) { folders.any? ? where(in_any_folder(folders)) : none }
+  scope :outside_folders, ->(folders) { where.not(in_any_folder(folders)) if folders.any? }
   # All of them when there's no query.
   scope :matching, lambda { |query|
     where("line LIKE :query OR notes LIKE :query", query: "%#{sanitize_sql_like(query)}%") if query
@@ -43,6 +41,10 @@ class Reminder < ApplicationRecord
     end
   end
 
+  def self.in_any_folder(folders)
+    folders.map { arel_table[:note_path].matches("#{sanitize_sql_like(it)}/%", "\\") }.reduce(:or)
+  end
+
   def self.mark_missing(reminders)
     reminders.each { it.update!(missing_since: it.missing_since || Time.current) }
     where(missing_since: ..MISSING_GRACE_PERIOD.ago).delete_all
@@ -55,7 +57,7 @@ class Reminder < ApplicationRecord
 
   # Takes on the line's current attributes. Its time is read, relative to now, when it's new, when its directive was
   # edited (which only its block ID lets it be followed through), and, until it's understood, each time, so it's
-  # scheduled once the parser learns its wording. A new reminder gets a block ID of its own if its line can have one.
+  # scheduled once the parser learns its wording. Once it's first scheduled, it gets a block ID if it can have one.
   def found_in_vault(attributes)
     assign_attributes(**attributes, missing_since: nil)
     if directive_changed? || !remind_at
@@ -63,7 +65,7 @@ class Reminder < ApplicationRecord
       schedule
     end
     save!
-    identify_later if previously_new_record? && identifiable?
+    identify_later if remind_at_before_last_save.nil? && identifiable?
   end
 
   # A repeating reminder moves on to its next occurrence, to be notified about again. Any other reminder, or a

@@ -11,7 +11,9 @@ RSpec.describe IdentifyReminderJob do
     end
   end
 
-  let(:note) { Pathname(Rails.configuration.x.vault_path).join("Errands.md") }
+  let(:note) { Pathname(Rails.configuration.x.vault_path).join("Tabitha/Errands.md").tap { it.dirname.mkpath } }
+
+  before { create(:user, note_folders: ["Tabitha"]) }
 
   it "ends the reminder's line with a new block ID, which the next sync takes on" do
     note.write("- [ ] Call the dentist (@friday)\n")
@@ -28,7 +30,7 @@ RSpec.describe IdentifyReminderJob do
   context "when the reminder already has a block ID" do
     it "leaves the note alone" do
       note.write("- [ ] Call the dentist (@friday) ^K3P9\n")
-      reminder = create(:reminder, note_path: "Errands.md", line: "- [ ] Call the dentist (@friday) ^K3P9",
+      reminder = create(:reminder, note_path: "Tabitha/Errands.md", line: "- [ ] Call the dentist (@friday) ^K3P9",
         block_id: "K3P9")
 
       described_class.perform_now(reminder)

@@ -90,8 +90,9 @@ to its next occurrence; any other is checked off in its note. Responds
   changed directive is read again. A line without an ID of its own (a new one,
   one with several directives, or a copy of another reminder's line, which
   gets a new ID) is matched by its note, line, and directive. The ID is added
-  two minutes after a reminder is found, so it doesn't land in a line someone's
-  still typing.
+  two minutes after a reminder is first scheduled, so it doesn't land in a line
+  someone's still typing, and only if someone receives it: notes outside
+  everyone's folders, or in their ignored folders, are never edited.
 - `CheckRemindersJob` runs every minute (Solid Queue recurring task). It scans
   every Markdown file in the vault for directives (`Vault`), stores new ones as
   `Reminder`s and deletes ones that are gone (`Reminder.sync`), then sends push

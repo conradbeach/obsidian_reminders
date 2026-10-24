@@ -37,7 +37,7 @@ RSpec.describe User do
         user = build(:user, note_folders: ["Tabitha"], reminders_note: "Conrad/Inbox.md")
 
         expect(user).to_not be_valid
-        expect(user.errors[:reminders_note]).to include("must be in one of your folders")
+        expect(user.errors[:reminders_note]).to include("must be in one of your folders, outside the ignored ones")
       end
     end
 
@@ -46,7 +46,16 @@ RSpec.describe User do
         user = build(:user, note_folders: ["Tabitha"], reminders_note: "Tabitha/../../outside.md")
 
         expect(user).to_not be_valid
-        expect(user.errors[:reminders_note]).to include("must be in one of your folders")
+        expect(user.errors[:reminders_note]).to include("must be in one of your folders, outside the ignored ones")
+      end
+    end
+
+    context "when the note is in one of the user's ignored folders" do
+      it "is invalid" do
+        user = build(:user, note_folders: ["Conrad"], ignored_folders: ["Conrad/Clippings"],
+          reminders_note: "Conrad/Clippings/Inbox.md")
+
+        expect(user).to_not be_valid
       end
     end
 
@@ -67,6 +76,14 @@ RSpec.describe User do
       create(:reminder, note_path: "Tabitha notes.md", line: "Not in the folder (@friday)")
 
       expect(user.reminders.map(&:text)).to contain_exactly("Call the dentist", "Water the plants", "Book the cabin")
+    end
+
+    it "leaves out reminders from notes inside the user's ignored folders" do
+      user = create(:user, note_folders: ["Conrad"], ignored_folders: ["Conrad/Clippings"])
+      create(:reminder, note_path: "Conrad/Errands.md", line: "Call the dentist (@friday)")
+      create(:reminder, note_path: "Conrad/Clippings/Work/Article.md", line: "Shardul (@shardiban)")
+
+      expect(user.reminders.map(&:text)).to eq(["Call the dentist"])
     end
 
     it "treats SQL wildcards in folder names literally" do

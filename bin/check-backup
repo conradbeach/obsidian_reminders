@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Confirms production's Litestream backup can be restored: restores the latest backup from R2 next to the live
+# database, checks and compares it there (script/check_backup.rb), and deletes it. The live database isn't touched.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+bin/kamal accessory exec litestream --reuse \
+  "litestream restore -o /rails/storage/backup-check.sqlite3 /rails/storage/production.sqlite3"
+bin/kamal app exec --reuse "bin/rails runner script/check_backup.rb"
+touch tmp/backup-checked

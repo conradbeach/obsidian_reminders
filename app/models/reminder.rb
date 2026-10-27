@@ -58,10 +58,12 @@ class Reminder < ApplicationRecord
   # Takes on the line's current attributes. Its time is read, relative to now, when it's new, when its directive was
   # edited (which only its block ID lets it be followed through), and, until it's understood, each time, so it's
   # scheduled once the parser learns its wording. Once it's first scheduled, it gets a block ID if it can have one.
-  # One marked done whose line is then edited, rather than checked off, is wanted again.
+  # One marked done is wanted again if its line is edited rather than checked off, or comes back unchecked after
+  # being checked off.
   def found_in_vault(attributes)
+    unchecked = missing_since.present?
     assign_attributes(**attributes, missing_since: nil)
-    self.completed_at = nil if line_edited?
+    self.completed_at = nil if line_edited? || unchecked
     if directive_changed? || !remind_at
       self.notified_at = nil
       schedule

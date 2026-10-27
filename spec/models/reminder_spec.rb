@@ -117,6 +117,21 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when a reminder marked done has its line checked off, then unchecked" do
+      it "shows it again, at its original time" do
+        user = create(:user, note_folders: ["Tabitha"])
+        reminder = create(:reminder, **dentist, note_path: "Tabitha/Errands.md", remind_at: 2.hours.from_now,
+          completed_at: 1.minute.ago)
+
+        described_class.sync(vault_with)
+        travel 2.minutes
+        described_class.sync(vault_with(dentist.merge(note_path: "Tabitha/Errands.md")))
+
+        expect(user.reminders).to eq([reminder])
+        expect(reminder.reload.remind_at).to eq(now + 2.hours)
+      end
+    end
+
     context "when a reminder marked done is found unchanged, before its line is checked off" do
       it "keeps it done" do
         reminder = create(:reminder, **dentist, completed_at: 5.seconds.ago)

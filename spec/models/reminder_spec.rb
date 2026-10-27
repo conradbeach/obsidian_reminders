@@ -102,6 +102,41 @@ RSpec.describe Reminder do
       end
     end
 
+    context "when a reminder marked done has its line edited instead of checked off" do
+      it "shows it again, at its new time" do
+        user = create(:user, note_folders: ["Tabitha"])
+        line = "- apologize to Ezra about bandaids (@tomorrow 9am) ^J3O9"
+        reminder = create(:reminder, **dentist, note_path: "Tabitha/To Do.md", line:, block_id: "J3O9",
+          completed_at: 1.day.ago)
+
+        described_class.sync(vault_with(dentist.merge(note_path: "Tabitha/To Do.md", block_id: "J3O9",
+          line: "- apologize to Ezra about bandaids (@Sunday at 11am) ^J3O9", directive: "Sunday at 11am")))
+
+        expect(user.reminders).to eq([reminder])
+        expect(reminder.reload.remind_at).to eq(Time.zone.parse("2026-10-25 11:00"))
+      end
+    end
+
+    context "when a reminder marked done is found unchanged, before its line is checked off" do
+      it "keeps it done" do
+        reminder = create(:reminder, **dentist, completed_at: 5.seconds.ago)
+
+        described_class.sync(vault_with(dentist))
+
+        expect(reminder.reload.completed_at).to be_present
+      end
+    end
+
+    context "when a reminder marked done has its line given a block ID" do
+      it "keeps it done" do
+        reminder = create(:reminder, **dentist, completed_at: 5.seconds.ago)
+
+        described_class.sync(vault_with(dentist.merge(line: "#{dentist[:line]} ^K3P9", block_id: "K3P9")))
+
+        expect(reminder.reload.completed_at).to be_present
+      end
+    end
+
     context "when a line with a block ID is copied" do
       it "keeps the reminder for the original and makes the copy a new reminder that gets its own ID" do
         create(:user, note_folders: ["Tabitha"])

@@ -31,4 +31,11 @@ module Reminder::Identifiable
   def identifiable?
     !block_id && remind_at && Vault.directives_in(line).one? && recipients.any?
   end
+
+  private
+
+  # Changed other than by gaining a block ID.
+  def line_edited?
+    line_changed? && line_was&.sub(Vault::BLOCK_ID, "") != line.sub(Vault::BLOCK_ID, "")
+  end
 end

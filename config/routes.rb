@@ -8,6 +8,7 @@ Rails.application.routes.draw do
   resource :guide, only: :show
   resource :reminder_filter, only: :update
   resource :api_token, only: :create
+  resource :test_notification, only: :create
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

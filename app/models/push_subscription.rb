@@ -22,13 +22,8 @@ class PushSubscription < ApplicationRecord
 
   # Returns whether the push service accepted the notification.
   def deliver(title:, path:)
-    WebPush.payload_send(
-      message: { title:, options: { data: { path: } } }.to_json,
-      endpoint:,
-      p256dh: p256dh_key,
-      auth: auth_key,
-      vapid: Rails.application.credentials.vapid,
-    )
+    response = push({ title:, options: { data: { path: } } }.to_json)
+    Rails.logger.info("Push to subscription #{id} accepted: #{response.code}")
     true
   rescue WebPush::ExpiredSubscription, WebPush::InvalidSubscription
     destroy
@@ -39,6 +34,13 @@ class PushSubscription < ApplicationRecord
   end
 
   private
+
+  # Sent as urgent, since a reminder is only useful on time: push services may hold back other notifications to save
+  # a device's battery.
+  def push(message)
+    WebPush.payload_send(message:, endpoint:, p256dh: p256dh_key, auth: auth_key,
+      vapid: Rails.application.credentials.vapid, urgency: "high")
+  end
 
   def endpoint_is_a_push_service
     uri = endpoint_uri

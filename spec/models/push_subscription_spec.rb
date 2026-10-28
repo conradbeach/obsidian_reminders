@@ -32,16 +32,17 @@ RSpec.describe PushSubscription do
 
   describe "#deliver" do
     context "when the push service accepts the notification" do
-      it "sends the notification payload and returns true" do
+      it "sends the notification payload as urgent and returns true" do
         subscription = create(:push_subscription)
-        allow(WebPush).to receive(:payload_send)
+        allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))
 
         result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(true)
         message = { title: "Call the dentist", options: { data: { path: "/" } } }.to_json
         expect(WebPush).to have_received(:payload_send)
-          .with(hash_including(endpoint: subscription.endpoint, p256dh: "p256dh-key", auth: "auth-key", message:))
+          .with(hash_including(endpoint: subscription.endpoint, p256dh: "p256dh-key", auth: "auth-key", message:,
+            urgency: "high"))
       end
     end
 

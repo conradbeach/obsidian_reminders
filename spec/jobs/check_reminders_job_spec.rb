@@ -15,7 +15,7 @@ RSpec.describe CheckRemindersJob do
   it "notifies about a reminder once its time comes" do
     travel_to Time.zone.parse("2026-10-19 18:00")
     create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
-    allow(WebPush).to receive(:payload_send)
+    allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))
     File.write("#{Rails.configuration.x.vault_path}/Tabitha/Errands.md", "- [ ] Call the dentist (@in 5 minutes)")
 
     described_class.perform_now

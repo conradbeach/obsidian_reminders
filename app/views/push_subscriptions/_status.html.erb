@@ -18,12 +18,15 @@
       Notifications are off on this device.
       <button type="button" class="btn-primary" data-action="push-notifications#enable">Turn on</button>
     </p>
-    <p data-push-notifications-target="enabled" hidden class="flex items-center justify-between gap-4">
+    <div data-push-notifications-target="enabled" hidden>
       <% unless alert %>
-        This device gets reminder notifications.
-        <button type="button" class="btn-secondary" data-action="push-notifications#disable">Turn off</button>
+        <p>This device gets reminder notifications.</p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <%= button_to "Send test notification", test_notification_path, class: "btn-secondary" %>
+          <button type="button" class="btn-secondary" data-action="push-notifications#disable">Turn off</button>
+        </div>
       <% end %>
-    </p>
+    </div>
     <p data-push-notifications-target="failed" hidden class="flex items-center justify-between gap-4 <%= state_class %>">
       Notifications couldn't be turned on for this device.
       <button type="button" class="btn-primary" data-action="push-notifications#enable">Try again</button>

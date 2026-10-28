@@ -248,7 +248,7 @@ RSpec.describe Reminder do
   end
 
   describe ".notify_due" do
-    before { allow(WebPush).to receive(:payload_send) }
+    before { allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201")) }
 
     context "when a reminder's time has come" do
       it "notifies the devices of users whose folders contain the note and marks the reminder notified" do
@@ -399,7 +399,7 @@ RSpec.describe Reminder do
 
     it "is never notified about" do
       create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
-      allow(WebPush).to receive(:payload_send)
+      allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))
       create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.ago, completed_at: 2.minutes.ago)
 
       described_class.notify_due

@@ -8,6 +8,9 @@ export default class extends Controller {
     if (!("serviceWorker" in navigator) || !("PushManager" in window)) return this.show("unsupported")
     if (Notification.permission === "denied") return this.show("denied")
 
+    // Picks up a changed service worker now rather than whenever the browser next checks.
+    navigator.serviceWorker.getRegistration().then((registration) => registration?.update())
+
     // Re-sends an existing subscription so the server learns about one the browser rotated.
     const subscription = await this.currentSubscription()
     if (subscription) {

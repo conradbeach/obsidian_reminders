@@ -39,10 +39,22 @@ RSpec.describe PushSubscription do
         result = subscription.deliver(title: "Call the dentist", path: "/")
 
         expect(result).to be(true)
-        message = { title: "Call the dentist", options: { data: { path: "/" } } }.to_json
+        delivery = subscription.deliveries.sole
+        message = { title: "Call the dentist", options: { data: { path: "/" } }, receipt: delivery.receipt_path }
+          .to_json
         expect(WebPush).to have_received(:payload_send)
           .with(hash_including(endpoint: subscription.endpoint, p256dh: "p256dh-key", auth: "auth-key", message:,
             urgency: "high"))
+      end
+
+      it "records the delivery as accepted, for the device to report receiving" do
+        subscription = create(:push_subscription)
+        allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))
+
+        subscription.deliver(title: "Call the dentist", path: "/")
+
+        expect(subscription.deliveries.sole).to have_attributes(title: "Call the dentist", accepted_at: be_present,
+          received_at: nil, shown_at: nil)
       end
     end
 
@@ -71,6 +83,7 @@ RSpec.describe PushSubscription do
 
         expect(result).to be(false)
         expect(described_class).to exist(subscription.id)
+        expect(subscription.deliveries.sole.accepted_at).to be_nil
       end
     end
 

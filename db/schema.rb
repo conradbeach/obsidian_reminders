@@ -10,7 +10,20 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_24_030132) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_31_163450) do
+  create_table "push_deliveries", force: :cascade do |t|
+    t.integer "push_subscription_id", null: false
+    t.string "title", null: false
+    t.string "receipt_token"
+    t.datetime "accepted_at"
+    t.datetime "received_at"
+    t.datetime "shown_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["push_subscription_id"], name: "index_push_deliveries_on_push_subscription_id"
+    t.index ["receipt_token"], name: "index_push_deliveries_on_receipt_token", unique: true
+  end
+
   create_table "push_subscriptions", force: :cascade do |t|
     t.integer "user_id", null: false
     t.string "endpoint", null: false
@@ -68,6 +81,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_24_030132) do
     t.index ["email_address"], name: "index_users_on_email_address", unique: true
   end
 
+  add_foreign_key "push_deliveries", "push_subscriptions"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "sessions", "users"
 end

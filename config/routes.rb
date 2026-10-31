@@ -9,6 +9,9 @@ Rails.application.routes.draw do
   resource :reminder_filter, only: :update
   resource :api_token, only: :create
   resource :test_notification, only: :create
+  resources :push_deliveries, only: [], param: :receipt_token do
+    resource :receipt, only: :create, module: :push_deliveries
+  end
   mount MissionControl::Jobs::Engine, at: "/jobs"
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

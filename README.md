@@ -107,6 +107,11 @@ to its next occurrence; any other is checked off in its note. Responds
 - A notification that no device accepts is retried every minute for an hour. A
   reminder whose time is more than an hour past when the app first sees it is
   never sent, so editing an old note or unchecking an old task doesn't notify.
+- Each notification sent to a device is a `PushDelivery`, recording when the
+  push service accepted it and when the device's service worker received and
+  showed it (it posts back to the delivery's receipt URL). A notification that
+  never appeared shows where it was lost: accepted but never received points
+  at the push service or the device, received but never shown at the device.
 - Background jobs (Solid Queue) are visible in Mission Control at `/jobs`.
 
 ## Development

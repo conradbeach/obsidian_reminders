@@ -21,7 +21,7 @@ exec setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/home/node XDG_CO
 
   # Continuous mode, restarted every 30 minutes: its connection can go stale, logging "Fully synced" while missing
   # changes until restarted. Restarts are spaced out because each one rescans the whole vault, writing a record for
-  # every note to its state database (several MB). timeout's SIGTERM shuts it down cleanly.
+  # every note to its state database (several MB). The SIGTERM from timeout shuts it down cleanly.
   while true; do
     timeout 30m "$ob" sync --path /vault --continuous || [ $? -eq 124 ] || {
       echo "Sync failed; retrying in 30 seconds"

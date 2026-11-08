@@ -233,7 +233,7 @@ RSpec.describe Vault do
       end
     end
 
-    context "when the sync loop holds the vault's lock" do
+    context "when another edit holds the vault's lock" do
       it "gives up with Busy, leaving the note alone" do
         stub_const("Vault::LOCK_TIMEOUT", 0.2.seconds)
         write_note("Errands.md", "Call the dentist (@friday)\n")

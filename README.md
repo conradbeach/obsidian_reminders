@@ -74,17 +74,19 @@ to its next occurrence; any other is checked off in its note. Responds
 
 - **Obsidian Headless** ([`ob`](https://obsidian.md/help/sync/headless)) runs as
   a Kamal accessory and keeps a copy of the vault in two-way sync with Obsidian
-  Sync, running a one-shot `ob sync` every 30 seconds (its continuous mode
-  silently stopped receiving changes). Its sync state lives in the vault volume
+  Sync in continuous mode, restarted every 30 minutes because its connection
+  can silently stop receiving changes. Its sync state lives in the vault volume
   (`/vault/.ob-state`), so the two can't be lost separately: state outliving a
   wiped vault would look like every note being deleted.
 - The app changes notes in three ways: it adds reminders made in the app to
   the user's note (`Vault#append`), checks off a reminder's line
   (`CheckOffReminderJob`, `Vault#check_off`), and ends a new reminder's line
   with an Obsidian block ID (`IdentifyReminderJob`, `Vault#identify`). It edits
-  only a line unchanged since the last scan; replaces the note in one step;
-  and holds a lock (`/vault/.reminders.lock`) that each sync also holds, so it
-  never edits a note mid-sync. If the lock is busy it retries.
+  only a line unchanged since the last scan, replaces the note in one step,
+  and holds a lock (`/vault/.reminders.lock`) so two of its own edits never
+  touch a note at once. If the lock is busy it retries. Sync doesn't take the
+  lock, so a note changed on another device in the moment between the app
+  reading and replacing it loses that change; that's rare enough to accept.
 - A reminder is matched to its line by the line's block ID (`^K3P9`), so its
   words can change, or it can move to another note, and keep its time; a
   changed directive is read again. A line without an ID of its own (a new one,

@@ -19,11 +19,13 @@ exec setpriv --reuid=1000 --regid=1000 --clear-groups env HOME=/home/node XDG_CO
     sleep 60
   done
 
-  # A fresh one-shot sync every 30 seconds rather than continuous mode, whose connection can go stale: it kept
-  # logging "Fully synced" while missing changes until restarted. Each sync holds the lock the app takes before
-  # checking off a reminder in a note (Vault::LOCK_FILE), so the two never touch a note at the same time.
+  # Continuous mode, restarted every 30 minutes: its connection can go stale, logging "Fully synced" while missing
+  # changes until restarted. Restarts are spaced out because each one rescans the whole vault, writing a record for
+  # every note to its state database (several MB). timeout's SIGTERM shuts it down cleanly.
   while true; do
-    flock /vault/.reminders.lock "$ob" sync --path /vault || echo "Sync failed; retrying in 30 seconds"
-    sleep 30
+    timeout 30m "$ob" sync --path /vault --continuous || [ $? -eq 124 ] || {
+      echo "Sync failed; retrying in 30 seconds"
+      sleep 30
+    }
   done
 '

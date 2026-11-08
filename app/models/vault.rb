@@ -4,8 +4,7 @@ class Vault
   # An Obsidian block ID ending a line: "Call the dentist (@friday) ^K3P9". It identifies a reminder through edits.
   BLOCK_ID = /\s+\^([A-Za-z0-9-]+)\z/
   COMPLETED_TASK = /\A\s*(?:[-*+]|\d+[.)])\s+\[[xX]\]/
-  # Shared with the obsidian accessory's sync loop (config/obsidian/start.sh), so the app never edits a note while
-  # Obsidian Headless is syncing it. Dot-files aren't synced.
+  # Held while the app edits a note, so two of its edits never touch the same note at once. Dot-files aren't synced.
   LOCK_FILE = ".reminders.lock".freeze
   LOCK_TIMEOUT = 10.seconds
 
@@ -55,7 +54,7 @@ class Vault
 
   private
 
-  # Raises Busy if the sync loop holds the lock for longer than the timeout.
+  # Raises Busy if another edit holds the lock for longer than the timeout.
   def synchronize
     @path.join(LOCK_FILE).open(File::RDWR | File::CREAT) do |lock|
       deadline = LOCK_TIMEOUT.from_now

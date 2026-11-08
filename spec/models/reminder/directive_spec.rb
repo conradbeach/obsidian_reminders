@@ -156,6 +156,20 @@ RSpec.describe Reminder::Directive do
       ["next friday", "2026-10-23 09:00"],
     ]
 
+    reads "an nth weekday of a month, which is this year's or, once its time has passed, next year's", [
+      ["first sunday in december", "2026-12-06 09:00"],
+      ["the 1st sun of dec at 3pm", "2026-12-06 15:00"],
+      ["on the first Sunday in December", "2026-12-06 09:00"],
+      ["1st sun in dec.", "2026-12-06 09:00"],
+      ["second tue in nov", "2026-11-10 09:00"],
+      ["last saturday in october", "2026-10-31 09:00"],
+      ["first monday in january", "2027-01-04 09:00"],
+      ["first sunday in october", "2027-10-03 09:00"],
+      ["3rd monday in october at 7pm", "2026-10-19 19:00"],
+      ["3rd monday in october", "2027-10-18 09:00"],
+      ["5th sunday in february", "2032-02-29 09:00"],
+    ]
+
     reads "a number of minutes or hours from now", [
       ["in 30 minutes", "2026-10-19 18:30"],
       ["in 30 mins", "2026-10-19 18:30"],
@@ -284,6 +298,15 @@ RSpec.describe Reminder::Directive do
       ["tomorrow 9", nil],
       ["tu", nil],
       ["Dec at 2:00", nil],
+    ]
+
+    reads "an nth weekday of a month that isn't understood", [
+      ["first sunday", nil],
+      ["first sunday in december 2027", nil],
+      ["first sunday in jan and jun", nil],
+      ["first funday in december", nil],
+      ["first sunday in smarch", nil],
+      ["sixth sunday in december", nil],
     ]
 
     reads "a time or date that doesn't exist", [

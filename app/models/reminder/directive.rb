@@ -13,6 +13,8 @@ class Reminder::Directive
   DURATION = /\Ain\s+#{COUNT}\s+(?<unit>minute|min|hour|hr)s?\z/
   DATE_OFFSET = /\Ain\s+#{COUNT}\s+(?<unit>day|week|month|year)s?\z/
   WEEKDAY = /\A(?:(?<modifier>this|next)\s+)?(?<name>[a-z]{3,})\z/
+  NTH_WEEKDAY_IN_MONTH =
+    /\A(?:the\s+)?#{Reminder::Recurrence::Calendar::ORDINAL}\s+[a-z]+\s+(?:in|of)\s+[a-z]+\.?\z/
 
   def self.count(text)
     Integer(text, 10, exception: false) || COUNTS[text]
@@ -56,12 +58,20 @@ class Reminder::Directive
 
   def date_and_clock_time
     date_text, clock = Reminder::Clock.split(@text)
-    date, roll = date_and_roll(date_text.delete_prefix("on ").strip)
+    date_text = date_text.delete_prefix("on ").strip
+    clock ||= [DATE_ONLY_HOUR, 0]
+    return nth_weekday_in_month(date_text, clock) if NTH_WEEKDAY_IN_MONTH.match?(date_text)
+
+    date, roll = date_and_roll(date_text)
     return unless date
 
-    clock ||= [DATE_ONLY_HOUR, 0]
     time = at(date, clock)
     roll && time <= @now ? at(date.advance(roll), clock) : time
+  end
+
+  # "first sunday in december": the next occurrence of the same repeat, so next year's once this year's has passed.
+  def nth_weekday_in_month(text, clock)
+    Reminder::Recurrence::Calendar.parse(text, clock:, anchor: nil)&.first_time(@now)
   end
 
   def recurring?

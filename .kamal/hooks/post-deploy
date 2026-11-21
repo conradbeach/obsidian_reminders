@@ -1,0 +1,14 @@
+#!/usr/bin/env sh
+# Keeps only the deployed image in GitHub Container Registry, so old images
+# don't accumulate there. Rollbacks don't need them: Kamal rolls back from the
+# image copies it keeps on the server. Deleting needs the delete:packages scope
+# on gh's token. A failure only warns, since the deploy itself has succeeded.
+package=obsidian_reminders
+
+gh api --paginate "/user/packages/container/$package/versions" \
+  --jq ".[] | select(.metadata.container.tags | index(\"$KAMAL_VERSION\") | not) | .id" |
+  while read -r version_id; do
+    gh api --silent -X DELETE "/user/packages/container/$package/versions/$version_id" ||
+      echo "Could not delete $package image version $version_id from GHCR" >&2
+  done || echo "Could not prune old $package images from GHCR" >&2
+exit 0

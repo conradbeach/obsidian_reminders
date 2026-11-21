@@ -2,7 +2,7 @@
 # Deploys to the home server over Tailscale. Server names and backup settings
 # come from Rails credentials (see README.md) so they stay out of the repo.
 service: obsidian_reminders
-image: obsidian_reminders
+image: conradbeach/obsidian_reminders
 
 servers:
   web:
@@ -24,9 +24,16 @@ proxy:
     bind_ips:
       - 127.0.0.1
 
-# Kamal runs a local registry and forwards it to the server over SSH.
+# GitHub Container Registry rather than Kamal's local registry, which can't
+# deploy from the home server to itself: its SSH port forward collides with the
+# registry's own port when both ends are the same machine. The password is gh's
+# token, so the deploying machine's gh login needs the write:packages scope,
+# plus delete:packages for .kamal/hooks/post-deploy.
 registry:
-  server: localhost:5555
+  server: ghcr.io
+  username: conradbeach
+  password:
+    - KAMAL_REGISTRY_PASSWORD
 
 env:
   secret:
@@ -54,6 +61,10 @@ asset_path: /rails/public/assets
 
 builder:
   arch: amd64
+  # One plain manifest per image, with no untagged attestation manifests beside
+  # it, so the post-deploy hook can delete old images by tag without breaking
+  # the current one.
+  provenance: false
 
 accessories:
   # Keeps a copy of the Obsidian vault in two-way sync with Obsidian Sync: the

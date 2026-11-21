@@ -217,8 +217,11 @@ is only reachable over Tailscale:
   and service worker apart from other apps on the server.
 - kamal-proxy listens on `127.0.0.1:8380` and routes by host name. It's shared
   by every Kamal app on the server; keep their proxy settings in sync.
-- Kamal runs a local registry and tunnels it over SSH, so no Docker Hub account
-  is needed.
+- Images go to GitHub Container Registry (`ghcr.io/conradbeach/obsidian_reminders`), so the
+  app can be deployed from any machine, the home server included. Kamal logs in
+  with `gh auth token`, so the deploying machine's `gh` needs the
+  `write:packages` and `delete:packages` scopes (the post-deploy hook deletes
+  old images): `gh auth refresh -s write:packages,delete:packages`.
 
 ### First deploy
 

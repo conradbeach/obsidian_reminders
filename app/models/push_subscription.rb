@@ -17,14 +17,15 @@ class PushSubscription < ApplicationRecord
   ].freeze
 
   # Returns whether any subscription accepted the notification.
-  def self.deliver_to_all(title:, path:)
-    find_each.map { it.deliver(title:, path:) }.any?
+  def self.deliver_to_all(title:, path:, reminder: nil)
+    find_each.map { it.deliver(title:, path:, reminder:) }.any?
   end
 
-  # Returns whether the push service accepted the notification.
-  def deliver(title:, path:)
-    delivery = deliveries.create!(title:)
-    response = push(title:, options: { data: { path: } }, receipt: delivery.receipt_path)
+  # Returns whether the push service accepted the notification. A reminder's notification has a button to mark it
+  # done.
+  def deliver(title:, path:, reminder: nil)
+    delivery = deliveries.create!(title:, reminder:)
+    response = push(delivery.message(path:))
     delivery.update!(accepted_at: Time.current)
     Rails.logger.info("Push #{delivery.id} to subscription #{id} accepted: #{response.code}")
     true
@@ -40,7 +41,7 @@ class PushSubscription < ApplicationRecord
 
   # Sent as urgent, since a reminder is only useful on time: push services may hold back other notifications to save
   # a device's battery.
-  def push(**message)
+  def push(message)
     WebPush.payload_send(message: message.to_json, endpoint:, p256dh: p256dh_key, auth: auth_key,
       vapid: Rails.application.credentials.vapid, urgency: "high")
   end

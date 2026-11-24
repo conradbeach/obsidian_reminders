@@ -12,9 +12,15 @@ self.addEventListener("push", (event) => {
 })
 
 self.addEventListener("notificationclick", (event) => {
-  event.notification.close()
-  const path = event.notification.data.path
+  const notification = event.notification
+  notification.close()
 
+  if (event.action === "complete") {
+    event.waitUntil(complete(notification))
+    return
+  }
+
+  const path = notification.data.path
   event.waitUntil(
     clients.matchAll({ type: "window" }).then((clientList) => {
       const client = clientList.find((client) => new URL(client.url).pathname === path && "focus" in client)
@@ -22,3 +28,14 @@ self.addEventListener("notificationclick", (event) => {
     })
   )
 })
+
+// Marks the reminder done. If the server can't be reached, the notification comes back so the Done button can be tried
+// again, rather than the reminder silently staying undone.
+const complete = (notification) =>
+  fetch(notification.data.completion, { method: "POST" })
+    .then((response) => { if (!response.ok) throw new Error(response.statusText) })
+    .catch(() => self.registration.showNotification(notification.title, {
+      body: "Couldn't mark this done. Try again.",
+      data: notification.data,
+      actions: notification.actions
+    }))

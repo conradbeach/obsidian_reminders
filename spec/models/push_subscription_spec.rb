@@ -47,6 +47,21 @@ RSpec.describe PushSubscription do
             urgency: "high"))
       end
 
+      it "gives a reminder's notification a Done button that marks it done" do
+        subscription = create(:push_subscription)
+        reminder = create(:reminder)
+        allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))
+
+        subscription.deliver(title: "Call the dentist", path: "/", reminder:)
+
+        delivery = subscription.deliveries.sole
+        expect(delivery.reminder).to eq(reminder)
+        expect(WebPush).to have_received(:payload_send).with(hash_including(message: a_string_including(
+          %("completion":"/push_deliveries/#{delivery.receipt_token}/completion"),
+          '"actions":[{"action":"complete","title":"Done"}]',
+        )))
+      end
+
       it "records the delivery as accepted, for the device to report receiving" do
         subscription = create(:push_subscription)
         allow(WebPush).to receive(:payload_send).and_return(instance_double(Net::HTTPCreated, code: "201"))

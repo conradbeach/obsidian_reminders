@@ -231,6 +231,17 @@ RSpec.describe Reminder do
         described_class.sync(vault_with)
         expect(described_class).to_not exist(reminder.id)
       end
+
+      it "keeps the notifications sent for it, without their Done button's reminder" do
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", line: "Pick up dry cleaning (@friday)")
+        delivery = create(:push_subscription).deliveries.create!(title: "Pick up dry cleaning", reminder:)
+
+        described_class.sync(vault_with)
+        travel 5.minutes
+        described_class.sync(vault_with)
+
+        expect(delivery.reload.reminder_id).to be_nil
+      end
     end
 
     context "when a missing reminder comes back within five minutes" do
@@ -264,6 +275,15 @@ RSpec.describe Reminder do
           endpoint: "https://web.push.apple.com/tabitha", message: a_string_including('"title":"Call the dentist"'),
         ))
         expect(reminder.reload.notified_at).to eq(now)
+      end
+
+      it "sends a notification that can mark the reminder done" do
+        create(:push_subscription, user: create(:user, note_folders: ["Tabitha"]))
+        reminder = create(:reminder, note_path: "Tabitha/Errands.md", remind_at: 1.minute.ago)
+
+        described_class.notify_due
+
+        expect(PushDelivery.sole.reminder).to eq(reminder)
       end
     end
 

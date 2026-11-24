@@ -1,3 +1,8 @@
+// A new version takes over at once rather than waiting for every window of the app to close, which an installed app
+// rarely does, so notifications are handled by the latest code. It caches nothing, so there's no state to migrate.
+self.addEventListener("install", () => self.skipWaiting())
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()))
+
 self.addEventListener("push", (event) => {
   const { title, options, receipt } = event.data.json()
 

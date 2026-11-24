@@ -114,6 +114,10 @@ to its next occurrence; any other is checked off in its note. Responds
   showed it (it posts back to the delivery's receipt URL). A notification that
   never appeared shows where it was lost: accepted but never received points
   at the push service or the device, received but never shown at the device.
+- A reminder's notification has a Done button, where the device supports one
+  (Android, not iOS). Like a receipt, it's authorized by the delivery's receipt
+  token, and it marks the reminder done as the device's user. A repeating
+  reminder that already moved on isn't moved again by a second tap.
 - Background jobs (Solid Queue) are visible in Mission Control at `/jobs`.
 
 ## Development

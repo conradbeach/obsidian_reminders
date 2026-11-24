@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_31_163450) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_24_002917) do
   create_table "push_deliveries", force: :cascade do |t|
     t.integer "push_subscription_id", null: false
     t.string "title", null: false
@@ -20,8 +20,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_163450) do
     t.datetime "shown_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.integer "reminder_id"
     t.index ["push_subscription_id"], name: "index_push_deliveries_on_push_subscription_id"
     t.index ["receipt_token"], name: "index_push_deliveries_on_receipt_token", unique: true
+    t.index ["reminder_id"], name: "index_push_deliveries_on_reminder_id"
   end
 
   create_table "push_subscriptions", force: :cascade do |t|
@@ -82,6 +84,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_31_163450) do
   end
 
   add_foreign_key "push_deliveries", "push_subscriptions"
+  add_foreign_key "push_deliveries", "reminders", on_delete: :nullify
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "sessions", "users"
 end

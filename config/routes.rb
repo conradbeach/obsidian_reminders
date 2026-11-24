@@ -11,6 +11,7 @@ Rails.application.routes.draw do
   resource :test_notification, only: :create
   resources :push_deliveries, only: [], param: :receipt_token do
     resource :receipt, only: :create, module: :push_deliveries
+    resource :completion, only: :create, module: :push_deliveries
   end
   mount MissionControl::Jobs::Engine, at: "/jobs"
 

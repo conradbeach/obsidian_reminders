@@ -112,7 +112,7 @@ class Reminder < ApplicationRecord
   # Stays unsent, to be retried, when none of the recipients' devices accept the notification.
   def notify
     subscriptions = PushSubscription.where(user: recipients)
-    update!(notified_at: Time.current) if subscriptions.deliver_to_all(title: text, path: "/")
+    update!(notified_at: Time.current) if subscriptions.deliver_to_all(title: text, path: "/", reminder: self)
   end
 
   # The users whose folders contain the reminder's note.

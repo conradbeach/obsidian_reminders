@@ -508,7 +508,15 @@ RSpec.describe Reminder do
   end
 
   describe "#obsidian_url" do
-    context "when the reminder is under a heading" do
+    context "when the reminder has a block ID" do
+      it "links to the reminder's block in the note" do
+        reminder = build(:reminder, note_path: "Home/Car registration.md", heading: "This year", block_id: "K3P9")
+
+        expect(reminder.obsidian_url).to eq("obsidian://open?vault=Vault&file=Home%2FCar%20registration%23%5EK3P9")
+      end
+    end
+
+    context "when the reminder has no block ID and is under a heading" do
       it "links to the heading in the note" do
         reminder = build(:reminder, note_path: "Home/Car registration.md", heading: "This year")
 
@@ -516,7 +524,7 @@ RSpec.describe Reminder do
       end
     end
 
-    context "when the reminder isn't under a heading" do
+    context "when the reminder has no block ID and isn't under a heading" do
       it "links to the note" do
         reminder = build(:reminder, note_path: "Home/Car registration.md", heading: nil)
 

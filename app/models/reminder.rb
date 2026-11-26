@@ -133,9 +133,9 @@ class Reminder < ApplicationRecord
     File.basename(note_path, ".md")
   end
 
-  # Opens the note at the reminder's heading, since Obsidian can't open a note at a line.
+  # Opens the note at the reminder's block, or its heading until it has a block ID; Obsidian can't open a line number.
   def obsidian_url
-    file = [note_path.delete_suffix(".md"), heading].compact.join("#")
+    file = [note_path.delete_suffix(".md"), block_id ? "^#{block_id}" : heading].compact.join("#")
     "obsidian://open?vault=#{ERB::Util.url_encode(Rails.configuration.x.vault_name)}&file=#{ERB::Util.url_encode(file)}"
   end
 
